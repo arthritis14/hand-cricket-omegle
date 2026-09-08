@@ -1,26 +1,167 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Matches the cream base of the illustrated corner artwork in the body
+     background below, so the sprites' keyed-out edges blend straight
+     into the page instead of showing a seam. */
+  --background: #f5f2e9;
+  --foreground: #111111;
+
+  /* Neo-brutalist palette - a wider spread of loud, flat colors rather
+     than one or two accents, so every screen gets its own identity. */
+  --brutal-purple: #7c6ff0;
+  --brutal-lime: #cdfa3f;
+  --brutal-coral: #ff6a4d;
+  --brutal-yellow: #ffd93f;
+  --brutal-pink: #ff7ab6;
+  --brutal-blue: #3d6bff;
+  --brutal-orange: #ff8c1a;
+  --brutal-mint: #17e3a6;
+  --brutal-red: #ff3b3b;
+  --brutal-black: #111111;
+  --brutal-white: #ffffff;
+  --brutal-cream: #f5f2e9;
+  /* Tinted "content panel" backgrounds that stand in for plain white
+     cards - still light enough for black text, but always carrying a
+     visible hue instead of washing out to white. */
+  --brutal-lilac: #ddceff;
+  --brutal-peach: #ffdcb8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* System font stacks - no external font fetch, so the build never
+     depends on reaching Google Fonts (and it won't hitch on a slow or
+     locked-down network at runtime either). The brutalist look comes
+     from weight/uppercase/tracking, not a specific typeface. */
+  --font-display: ui-sans-serif, "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-sans: ui-sans-serif, "Segoe UI", system-ui, -apple-system, sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-brutal-purple: var(--brutal-purple);
+  --color-brutal-lime: var(--brutal-lime);
+  --color-brutal-coral: var(--brutal-coral);
+  --color-brutal-yellow: var(--brutal-yellow);
+  --color-brutal-pink: var(--brutal-pink);
+  --color-brutal-blue: var(--brutal-blue);
+  --color-brutal-orange: var(--brutal-orange);
+  --color-brutal-mint: var(--brutal-mint);
+  --color-brutal-red: var(--brutal-red);
+  --color-brutal-black: var(--brutal-black);
+  --color-brutal-white: var(--brutal-white);
+  --color-brutal-cream: var(--brutal-cream);
+  --color-brutal-lilac: var(--brutal-lilac);
+  --color-brutal-peach: var(--brutal-peach);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  /* Illustrated corner artwork instead of a hand-coded pattern - three
+     hand-drawn cricket motifs (a thrown ball top-right, a hand cricket
+     gesture bottom-left, a floodlit stadium bottom-right), cropped from
+     one reference piece and keyed so their cream backdrop drops out and
+     blends straight into the page's own cream base. Fixed so it doesn't
+     scroll with short pages. */
+  background-image:
+    url("/bg-ball.webp"),
+    url("/bg-hand.webp"),
+    url("/bg-stadium.webp");
+  background-size:
+    280px auto,
+    260px auto,
+    340px auto;
+  background-position:
+    top right,
+    bottom left,
+    bottom right;
+  background-attachment: fixed;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+}
+
+/* ---- Neo-brutalist utility primitives ---- */
+
+.brutal-border {
+  border: 3px solid var(--brutal-black);
+}
+
+.brutal-border-thick {
+  border: 4px solid var(--brutal-black);
+}
+
+.brutal-shadow {
+  box-shadow: 6px 6px 0 0 var(--brutal-black);
+}
+
+.brutal-shadow-sm {
+  box-shadow: 3px 3px 0 0 var(--brutal-black);
+}
+
+.brutal-shadow-lg {
+  box-shadow: 12px 12px 0 0 var(--brutal-black);
+}
+
+.brutal-press {
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.brutal-press:active {
+  transform: translate(4px, 4px);
+  box-shadow: 2px 2px 0 0 var(--brutal-black);
+}
+
+/* Applied to the three home-screen mode buttons: on hover they lift off
+   the page and "pop" slightly larger, with the shadow stretching to
+   match, then the existing .brutal-press active-state still handles the
+   press-down feedback on click. */
+.brutal-lift {
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 180ms ease;
+}
+
+.brutal-lift:hover {
+  transform: translate(-2px, -8px) scale(1.03);
+  box-shadow: 9px 14px 0 0 var(--brutal-black);
+}
+
+.brutal-lift:focus-visible {
+  transform: translate(-2px, -8px) scale(1.03);
+  box-shadow: 9px 14px 0 0 var(--brutal-black);
+}
+
+/* Higher specificity than either rule alone, so an actual click still
+   presses down instead of staying lifted while the mouse is held. */
+.brutal-lift.brutal-press:active {
+  transform: translate(4px, 4px);
+  box-shadow: 2px 2px 0 0 var(--brutal-black);
+}
+
+.brutal-heading {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.brutal-dots {
+  background-image: radial-gradient(var(--brutal-black) 1.5px, transparent 1.5px);
+  background-size: 16px 16px;
+  opacity: 0.12;
+}
+
+/* Small "sticker" tilts for badges/cards, so the layout doesn't feel like
+   everything sits on a rigid grid. Used sparingly - one or two elements
+   per screen, not everything at once. */
+.brutal-tilt-l {
+  transform: rotate(-2deg);
+}
+
+.brutal-tilt-r {
+  transform: rotate(2deg);
+}
+
+/* Mirror the local camera feed so it behaves like a mirror, without
+   affecting the raw frames MediaPipe reads for detection. */
+.mirror {
+  transform: scaleX(-1);
 }
