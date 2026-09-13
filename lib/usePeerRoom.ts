@@ -183,21 +183,40 @@ export function usePeerRoom({ onMessage, enabled, strategy, roomId }: UsePeerRoo
     async function setup() {
       setStatus("requesting-camera");
       try {
-        // Video only, deliberately - there's no need for a live mic
-        // feed for this game, and dropping it avoids echo/feedback
-        // between two nearby devices and skips a permission prompt.
+        // Video + mic, so the two players can talk during a match. Echo
+        // cancellation/noise suppression/auto gain are switched on since
+        // this is exactly the "two nearby devices" case that risks local
+        // echo - the browser's own AEC handles that, rather than dropping
+        // audio entirely. The local tile is still rendered muted (see the
+        // VideoTile below) so no one ever hears themselves back.
         localMediaStream = await navigator.mediaDevices.getUserMedia({
           video: { width: 640, height: 480 },
-          audio: false,
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
         });
       } catch {
-        if (!cancelled) {
-          setError(
-            "Couldn't access your camera. Check permissions and reload."
-          );
-          setStatus("failed");
+        // Some browsers/extensions reject a combined video+audio request
+        // outright rather than prompting for both (or the mic gets denied
+        // on its own after the camera was already granted in a past
+        // session). Falling back to video-only keeps the game playable -
+        // losing voice chat is much better than losing the whole match.
+        try {
+          localMediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 640, height: 480 },
+            audio: false,
+          });
+        } catch {
+          if (!cancelled) {
+            setError(
+              "Couldn't access your camera. Check permissions and reload."
+            );
+            setStatus("failed");
+          }
+          return;
         }
-        return;
       }
       if (cancelled) {
         localMediaStream.getTracks().forEach((t) => t.stop());
