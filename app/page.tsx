@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BrutalButton, BrutalCard, BrutalBadge } from "@/components/Brutal";
 import { VideoTile } from "@/components/VideoTile";
 import { Countdown } from "@/components/Countdown";
 import { Scoreboard } from "@/components/Scoreboard";
@@ -467,56 +466,113 @@ export default function HomePage() {
 
   // --- Render states ---
 
+  if (!started && homeView === "menu") {
+    // The landing menu - restyled to the new neobrutalist system (see the
+    // "Neobrutalist v2" block in globals.css). Scoped to just this screen
+    // via the nb- prefixed classes below; every other screen (including
+    // the Private Match hub right after this block) still runs on the
+    // original brutal-* system until its own section gets designed and
+    // approved.
+    return (
+      <>
+        <div className="nb-hero-bg" />
+        <Centered>
+          <div className="nb-hero-wrap">
+            <svg
+              className="nb-motif-bat"
+              viewBox="0 0 232 385"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <polygon points="42,150 158,150 158,320 100,362 42,320" fill="#E8C39E" />
+              <polygon points="42,150 78,150 78,320 55,345 42,320" fill="#C9975F" />
+              <polygon
+                points="42,150 158,150 158,320 100,362 42,320"
+                fill="none"
+                stroke="#000"
+                strokeWidth="6"
+                strokeLinejoin="round"
+              />
+              <polygon points="70,340 100,362 78,350" fill="#00000022" />
+              <polygon
+                points="87,122 113,122 158,150 42,150"
+                fill="#FF6B6B"
+                stroke="#000"
+                strokeWidth="6"
+                strokeLinejoin="round"
+              />
+              <rect x="87" y="20" width="26" height="102" rx="13" fill="#FF6B6B" stroke="#000" strokeWidth="6" />
+              <g stroke="#7A1F1F" strokeWidth="3.5" strokeLinecap="round">
+                <line x1="90" y1="32" x2="110" y2="40" />
+                <line x1="90" y1="48" x2="110" y2="56" />
+                <line x1="90" y1="64" x2="110" y2="72" />
+                <line x1="90" y1="80" x2="110" y2="88" />
+                <line x1="90" y1="96" x2="110" y2="104" />
+              </g>
+              <rect x="87" y="4" width="26" height="18" rx="3" fill="#7A1F1F" stroke="#000" strokeWidth="5" />
+              <circle cx="185" cy="336" r="40" fill="#FF6B6B" stroke="#000" strokeWidth="6" />
+              <path
+                d="M 185 298 A 40 40 0 0 1 185 374"
+                fill="none"
+                stroke="#FFFDF5"
+                strokeWidth="3.5"
+                strokeDasharray="6 5"
+              />
+              <path
+                d="M 178 298 A 40 42 0 0 0 178 374"
+                fill="none"
+                stroke="#FFFDF5"
+                strokeWidth="3.5"
+                strokeDasharray="6 5"
+              />
+            </svg>
+
+            <div className="nb-badge">✋ vs ✋, live</div>
+            <div className="nb-card">
+              <h1 className="nb-title">
+                Hand<span className="nb-accent">Cricket</span>
+                <br />
+                Omegle
+              </h1>
+              <div className="nb-rule" />
+              <div className="nb-menu">
+                <button className="nb-btn nb-pink" onClick={() => setHomeView("private-hub")}>
+                  🔒 Private Match
+                </button>
+                <button className="nb-btn nb-green" onClick={() => beginMode("stranger")}>
+                  🌍 2 Player
+                </button>
+                <button className="nb-btn nb-blue" onClick={() => beginMode("computer")}>
+                  🤖 One Player
+                </button>
+              </div>
+            </div>
+            <p className="nb-credit">A Vilicon Salley Production</p>
+          </div>
+        </Centered>
+      </>
+    );
+  }
+
   if (!started) {
     return (
       <>
-        {homeView === "private-hub" && <BackButton onClick={() => setHomeView("menu")} />}
+        <BackButton onClick={() => setHomeView("menu")} />
         <Centered>
-        <div className="w-full max-w-md">
-          <BrutalCard tone="purple" className="mb-[-14px] ml-4 w-fit rotate-[-3deg] px-4 py-1.5">
-            <span className="brutal-heading text-xs">✋ vs ✋, live</span>
-          </BrutalCard>
-          <BrutalCard tone="lilac" className="brutal-border-thick relative w-full p-7 text-center">
-            <h1 className="brutal-heading text-3xl leading-none sm:text-4xl">
-              Hand<span className="text-brutal-coral">Cricket</span>
-              <br />
-              Omegle
-            </h1>
-            <div className="mx-auto mt-4 h-1.5 w-16 bg-brutal-lime" />
+          <div className="nb-hub-wrap">
+            <div className="nb-badge">✋ vs ✋, live</div>
+            <div className="nb-card" style={{ textAlign: "left" }}>
+              <h1 className="nb-title" style={{ fontSize: "32px", textAlign: "center" }}>
+                Hand<span className="nb-accent">Cricket</span>
+                <br />
+                Omegle
+              </h1>
+              <div className="nb-rule" />
 
-            {homeView === "menu" && (
-              <div className="mt-6 flex flex-col gap-3">
-                <BrutalButton
-                  tone="pink"
-                  className="brutal-lift w-full text-base"
-                  onClick={() => setHomeView("private-hub")}
-                >
-                  🔒 Private Match
-                </BrutalButton>
-                <BrutalButton
-                  tone="lime"
-                  className="brutal-lift w-full text-base"
-                  onClick={() => beginMode("stranger")}
-                >
-                  🌍 2 Player
-                </BrutalButton>
-                <BrutalButton
-                  tone="blue"
-                  className="brutal-lift w-full text-base"
-                  onClick={() => beginMode("computer")}
-                >
-                  🤖 One Player
-                </BrutalButton>
-              </div>
-            )}
-
-            {homeView === "private-hub" && !username && (
-              <div className="mt-4 text-left">
-                <div className="brutal-border rounded-xl bg-white/60 px-4 py-3">
-                  <p className="text-xs font-bold uppercase tracking-wide text-black/50">
-                    Create your account
-                  </p>
-                  <p className="mt-1 text-xs text-black/50">
+              {!username && (
+                <div className="nb-panel mt-4">
+                  <p className="nb-panel-k">Create your account</p>
+                  <p className="nb-panel-sub">
                     Pick a username - this is what friends will use to add you
                     and invite you straight into a match.
                   </p>
@@ -525,139 +581,117 @@ export default function HomePage() {
                     onChange={(e) => setUsernameInput(normalizeUsername(e.target.value))}
                     placeholder="username"
                     maxLength={16}
-                    className="brutal-border mt-3 w-full rounded-lg px-3 py-2 text-sm"
+                    className="nb-input mt-3"
                   />
-                  <BrutalButton
-                    tone="yellow"
-                    className="mt-2 w-full text-sm"
+                  <button
+                    className="nb-btn nb-yellow w-full mt-2"
+                    style={{ fontSize: "14px", padding: "12px 20px" }}
                     disabled={!isValidUsername(usernameInput) || presence.claimStatus === "claiming"}
                     onClick={handleCreateAccount}
                   >
                     {presence.claimStatus === "claiming" ? "Checking…" : "Create account"}
-                  </BrutalButton>
+                  </button>
                   {presence.claimStatus === "taken" && (
-                    <p className="mt-2 text-xs font-bold text-brutal-coral">
+                    <p className="nb-error-text">
                       That username&apos;s taken right now - try another.
                     </p>
                   )}
                   {presence.claimStatus === "error" && (
-                    <p className="mt-2 text-xs font-bold text-brutal-coral">
+                    <p className="nb-error-text">
                       Couldn&apos;t reach the network - check your connection and try again.
                     </p>
                   )}
                 </div>
-              </div>
-            )}
+              )}
 
-            {homeView === "private-hub" && username && (
-              <div className="mt-4 text-left">
-                <div className="brutal-border rounded-xl bg-white/60 px-4 py-3">
-                  <p className="text-xs font-bold uppercase tracking-wide text-black/50">
-                    Your username
-                  </p>
-                  <div className="mt-1 flex items-center justify-between gap-2">
-                    <p className="font-display text-2xl font-bold tracking-[0.05em]">
-                      {username}
+              {username && (
+                <div className="mt-4">
+                  <div className="nb-panel">
+                    <p className="nb-panel-k">Your username</p>
+                    <div className="nb-username-row">
+                      <p className="nb-username">{username}</p>
+                      <button className="nb-copy-btn" onClick={handleCopyUsername}>
+                        Copy
+                      </button>
+                    </div>
+                    <p className="nb-panel-sub">
+                      Share this so a friend can add you and invite you straight
+                      into a match.
                     </p>
+                  </div>
+
+                  {presence.incomingInvite && (
+                    <div className="nb-invite-banner">
+                      <p>{presence.incomingInvite.fromUsername} wants to play!</p>
+                      <div className="nb-invite-row">
+                        <button className="nb-btn nb-green" onClick={presence.acceptInvite}>
+                          Accept
+                        </button>
+                        <button className="nb-btn nb-black" onClick={presence.declineInvite}>
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <p className="nb-section-label">Add a friend</p>
+                    <div className="nb-field-row">
+                      <input
+                        value={friendUsernameInput}
+                        onChange={(e) => setFriendUsernameInput(normalizeUsername(e.target.value))}
+                        placeholder="Their username"
+                        maxLength={16}
+                        className="nb-input"
+                      />
+                      <input
+                        value={friendNicknameInput}
+                        onChange={(e) => setFriendNicknameInput(e.target.value)}
+                        placeholder="Name (optional)"
+                        maxLength={20}
+                        className="nb-input"
+                      />
+                    </div>
                     <button
-                      className="brutal-border brutal-shadow-sm brutal-press cursor-pointer rounded-lg bg-white px-3 py-1.5 text-xs font-bold uppercase"
-                      onClick={handleCopyUsername}
+                      className="nb-btn nb-orange w-full mt-2"
+                      style={{ fontSize: "14px", padding: "12px 20px" }}
+                      disabled={
+                        !isValidUsername(normalizeUsername(friendUsernameInput)) ||
+                        normalizeUsername(friendUsernameInput) === username
+                      }
+                      onClick={handleAddFriend}
                     >
-                      Copy
+                      Add friend
                     </button>
                   </div>
-                  <p className="mt-2 text-xs text-black/50">
-                    Share this so a friend can add you and invite you straight
-                    into a match.
-                  </p>
-                </div>
 
-                {presence.incomingInvite && (
-                  <div className="brutal-border brutal-shadow-sm mt-3 rounded-xl bg-brutal-yellow px-4 py-3">
-                    <p className="font-display text-sm font-bold">
-                      {presence.incomingInvite.fromUsername} wants to play!
-                    </p>
-                    <div className="mt-2 flex gap-2">
-                      <BrutalButton
-                        tone="lime"
-                        className="flex-1 text-sm"
-                        onClick={presence.acceptInvite}
-                      >
-                        Accept
-                      </BrutalButton>
-                      <BrutalButton
-                        tone="black"
-                        className="flex-1 text-sm"
-                        onClick={presence.declineInvite}
-                      >
-                        Decline
-                      </BrutalButton>
+                  <div className="mt-4">
+                    <p className="nb-section-label">Friends</p>
+                    {friends.length === 0 && (
+                      <p className="nb-empty-text">No friends saved yet.</p>
+                    )}
+                    <div className="mt-2 flex flex-col gap-2">
+                      {friends.map((friend) => (
+                        <FriendRow
+                          key={friend.username}
+                          friend={friend}
+                          status={presence.statuses[friend.username] ?? "checking"}
+                          outgoingStatus={
+                            presence.outgoingInvite?.toUsername === friend.username
+                              ? presence.outgoingInvite.status
+                              : null
+                          }
+                          onInvite={() => presence.sendInvite(friend.username)}
+                          onCancelInvite={presence.cancelOutgoingInvite}
+                          onRemove={() => handleRemoveFriend(friend.username)}
+                        />
+                      ))}
                     </div>
                   </div>
-                )}
-
-                <div className="mt-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-black/50">
-                    Add a friend
-                  </p>
-                  <div className="mt-1 flex gap-2">
-                    <input
-                      value={friendUsernameInput}
-                      onChange={(e) => setFriendUsernameInput(normalizeUsername(e.target.value))}
-                      placeholder="Their username"
-                      maxLength={16}
-                      className="brutal-border w-1/2 rounded-lg px-3 py-2 text-sm"
-                    />
-                    <input
-                      value={friendNicknameInput}
-                      onChange={(e) => setFriendNicknameInput(e.target.value)}
-                      placeholder="Name (optional)"
-                      maxLength={20}
-                      className="brutal-border w-1/2 rounded-lg px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <BrutalButton
-                    tone="yellow"
-                    className="mt-2 w-full text-sm"
-                    disabled={
-                      !isValidUsername(normalizeUsername(friendUsernameInput)) ||
-                      normalizeUsername(friendUsernameInput) === username
-                    }
-                    onClick={handleAddFriend}
-                  >
-                    Add friend
-                  </BrutalButton>
                 </div>
-
-                <div className="mt-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-black/50">
-                    Friends
-                  </p>
-                  {friends.length === 0 && (
-                    <p className="mt-2 text-sm text-black/50">No friends saved yet.</p>
-                  )}
-                  <div className="mt-2 flex flex-col gap-2">
-                    {friends.map((friend) => (
-                      <FriendRow
-                        key={friend.username}
-                        friend={friend}
-                        status={presence.statuses[friend.username] ?? "checking"}
-                        outgoingStatus={
-                          presence.outgoingInvite?.toUsername === friend.username
-                            ? presence.outgoingInvite.status
-                            : null
-                        }
-                        onInvite={() => presence.sendInvite(friend.username)}
-                        onCancelInvite={presence.cancelOutgoingInvite}
-                        onRemove={() => handleRemoveFriend(friend.username)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </BrutalCard>
-        </div>
+              )}
+            </div>
+          </div>
         </Centered>
       </>
     );
@@ -668,12 +702,12 @@ export default function HomePage() {
       <>
         <BackButton onClick={leaveToMenu} />
         <Centered>
-        <BrutalCard tone="red" className="w-full max-w-sm p-6 text-center brutal-tilt-l">
-          <p className="font-display font-bold uppercase">{error ?? "Something went wrong."}</p>
-          <BrutalButton tone="yellow" className="mt-4" onClick={() => window.location.reload()}>
-            Try again
-          </BrutalButton>
-        </BrutalCard>
+          <div className="nb-card nb-card--pink w-full max-w-sm">
+            <p className="nb-status-text">{error ?? "Something went wrong."}</p>
+            <button className="nb-btn nb-yellow w-full mt-4" onClick={() => window.location.reload()}>
+              Try again
+            </button>
+          </div>
         </Centered>
       </>
     );
@@ -684,12 +718,12 @@ export default function HomePage() {
       <>
         <BackButton onClick={leaveToMenu} />
         <Centered>
-        <BrutalCard tone="yellow" className="w-full max-w-sm p-6 text-center brutal-tilt-r">
-          <p className="font-display font-bold uppercase">Your opponent left the match.</p>
-          <BrutalButton tone="black" className="mt-4" onClick={() => window.location.reload()}>
-            Find a new match
-          </BrutalButton>
-        </BrutalCard>
+          <div className="nb-card nb-card--orange w-full max-w-sm">
+            <p className="nb-status-text">Your opponent left the match.</p>
+            <button className="nb-btn nb-black w-full mt-4" onClick={() => window.location.reload()}>
+              Find a new match
+            </button>
+          </div>
         </Centered>
       </>
     );
@@ -700,27 +734,21 @@ export default function HomePage() {
       <>
         <BackButton onClick={leaveToMenu} />
         <Centered>
-        <BrutalCard tone="blue" className="brutal-border-thick w-full max-w-md p-7 text-center">
-          <BrutalBadge tone="yellow" className="brutal-tilt-l">
-            Hand Cricket Omegle
-          </BrutalBadge>
-          <p className="mt-4 font-display text-sm font-bold uppercase tracking-wide text-white">
-            {statusLabel(status)}
-          </p>
-          {status === "waiting-for-opponent" && mode === "stranger" && (
-            <p className="mt-3 text-sm text-white/80">
-              Have your friend open this same site and hit play - you&apos;ll
-              be matched automatically.
-            </p>
-          )}
-          {status === "waiting-for-opponent" &&
-            (mode === "private-host" || mode === "private-guest") && (
-              <p className="mt-3 text-sm text-white/80">Connecting you into the match…</p>
+          <div className="nb-card nb-card--blue w-full max-w-md">
+            <div className="nb-status-badge">Hand Cricket Omegle</div>
+            <p className="nb-status-text mt-4">{statusLabel(status)}</p>
+            {status === "waiting-for-opponent" && mode === "stranger" && (
+              <p className="nb-status-sub mt-3">
+                Have your friend open this same site and hit play - you&apos;ll
+                be matched automatically.
+              </p>
             )}
-          {status === "waiting-for-opponent" && (
-            <div className="mx-auto mt-5 h-9 w-9 animate-spin rounded-full border-4 border-white border-t-brutal-yellow" />
-          )}
-        </BrutalCard>
+            {status === "waiting-for-opponent" &&
+              (mode === "private-host" || mode === "private-guest") && (
+                <p className="nb-status-sub mt-3">Connecting you into the match…</p>
+              )}
+            {status === "waiting-for-opponent" && <div className="nb-spinner" />}
+          </div>
         </Centered>
       </>
     );
@@ -729,32 +757,31 @@ export default function HomePage() {
   if (game.phase === "game-over") {
     const won = game.winner === role;
     const winnerLabel = game.winner === "tie" ? "It's a tie." : won ? "You won!" : "You lost.";
+    const toneClass =
+      game.winner === "tie" ? "nb-card--yellow" : won ? "nb-card--green" : "nb-card--pink";
     return (
       <Centered>
-        <BrutalCard
-          tone={game.winner === "tie" ? "yellow" : won ? "lime" : "coral"}
-          className="brutal-border-thick brutal-shadow-lg w-full max-w-sm p-6 text-center"
-        >
-          <BrutalBadge tone={won ? "mint" : "red"} className="mb-3 brutal-tilt-l">
-            Match over
-          </BrutalBadge>
-          <h1 className="brutal-heading text-4xl">{winnerLabel}</h1>
-          <div className="mt-5 flex justify-around">
+        <div className={`nb-card ${toneClass} w-full max-w-sm`}>
+          <div className="nb-status-badge">Match over</div>
+          <h1 className="nb-title" style={{ fontSize: "34px" }}>
+            {winnerLabel}
+          </h1>
+          <div className="nb-go-score">
             <div>
-              <p className="font-display text-xs uppercase text-black/60">{SELF_LABEL}</p>
-              <p className="font-display text-3xl font-bold">{game.innings[role].runs}</p>
+              <p className="nb-go-who">{SELF_LABEL}</p>
+              <p className="nb-go-runs">{game.innings[role].runs}</p>
             </div>
             <div>
-              <p className="font-display text-xs uppercase text-black/60">{PEER_LABEL}</p>
-              <p className="font-display text-3xl font-bold">
+              <p className="nb-go-who">{PEER_LABEL}</p>
+              <p className="nb-go-runs">
                 {opponentRole ? game.innings[opponentRole].runs : 0}
               </p>
             </div>
           </div>
-          <BrutalButton tone="black" className="mt-6 w-full" onClick={() => window.location.reload()}>
+          <button className="nb-btn nb-black w-full mt-2" onClick={() => window.location.reload()}>
             Find a new match
-          </BrutalButton>
-        </BrutalCard>
+          </button>
+        </div>
       </Centered>
     );
   }
@@ -762,12 +789,8 @@ export default function HomePage() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-6">
       <div className="flex items-center justify-between">
-        <h1 className="brutal-heading text-lg sm:text-xl">Hand Cricket</h1>
-        {rtt !== null && (
-          <BrutalBadge tone="blue" className="brutal-tilt-r">
-            Ping {rtt}ms
-          </BrutalBadge>
-        )}
+        <h2 className="nb-match-title">Hand Cricket</h2>
+        {rtt !== null && <div className="nb-status-badge nb-status-badge--sm">Ping {rtt}ms</div>}
       </div>
 
       <Scoreboard state={game} self={role} selfName={SELF_LABEL} peerName={PEER_LABEL} />
@@ -779,7 +802,7 @@ export default function HomePage() {
             label={`${SELF_LABEL}`}
             mirrored
             muted
-            tone="purple"
+            tone="self"
             videoRef={localVideoRef}
           />
           {game.phase === "throw-countdown" && <Countdown label={countdownLabel} />}
@@ -788,26 +811,26 @@ export default function HomePage() {
         <VideoTile
           stream={remoteStream}
           label={PEER_LABEL}
-          tone="coral"
+          tone="peer"
           blurred={strangerBlurred}
           blurReason={blurReason}
           placeholder={mode === "computer" ? <ComputerFace lastValue={computerLastThrow} /> : undefined}
         />
       </div>
 
-      <BrutalCard tone="peach" className="brutal-border-thick flex-1 p-5">
+      <div className="nb-phase-card flex-1">
         {game.phase === "toss-call" && (
           <PhaseBlock title="The toss">
             {role === "guest" ? (
               <>
                 <p className="mb-3 text-sm">Call it before you both throw:</p>
                 <div className="flex gap-3">
-                  <BrutalButton tone="mint" onClick={() => handleTossCall("odd")}>
+                  <button className="nb-btn nb-green" onClick={() => handleTossCall("odd")}>
                     Odd
-                  </BrutalButton>
-                  <BrutalButton tone="orange" onClick={() => handleTossCall("even")}>
+                  </button>
+                  <button className="nb-btn nb-orange" onClick={() => handleTossCall("even")}>
                     Even
-                  </BrutalButton>
+                  </button>
                 </div>
               </>
             ) : (
@@ -834,12 +857,12 @@ export default function HomePage() {
 
         {game.phase === "toss-result" && game.tossWinner && (
           <PhaseBlock title="Toss result">
-            <p className="font-display text-lg font-bold">
+            <p className="nb-phase-strong">
               You threw {game.ownValue} - they threw {game.peerValue}.
             </p>
-            <BrutalBadge tone={game.tossWinner === role ? "mint" : "pink"} className="mt-2">
+            <div className={`nb-chip mt-2 ${game.tossWinner === role ? "nb-chip--green" : "nb-chip--pink"}`}>
               {game.tossWinner === role ? "You" : PEER_LABEL} won the toss
-            </BrutalBadge>
+            </div>
           </PhaseBlock>
         )}
 
@@ -847,12 +870,12 @@ export default function HomePage() {
           <PhaseBlock title="Bat or bowl?">
             {game.tossWinner === role ? (
               <div className="flex gap-3">
-                <BrutalButton tone="lime" onClick={() => handleChooseSide("bat")}>
+                <button className="nb-btn nb-green" onClick={() => handleChooseSide("bat")}>
                   Bat first
-                </BrutalButton>
-                <BrutalButton tone="blue" onClick={() => handleChooseSide("bowl")}>
+                </button>
+                <button className="nb-btn nb-blue" onClick={() => handleChooseSide("bowl")}>
                   Bowl first
-                </BrutalButton>
+                </button>
               </div>
             ) : (
               <WaitingLine label={PEER_LABEL} action="to choose bat or bowl" />
@@ -866,15 +889,11 @@ export default function HomePage() {
               Batter threw {game.lastBall.batterValue}, bowler threw {game.lastBall.bowlerValue}.
             </p>
             {!game.lastBall.out && (
-              <BrutalBadge tone="mint" className="mt-2 text-base">
+              <div className="nb-chip nb-chip--green nb-chip--lg mt-2">
                 +{game.lastBall.batterValue} runs
-              </BrutalBadge>
+              </div>
             )}
-            {game.lastBall.out && (
-              <BrutalBadge tone="red" className="mt-2 text-base">
-                Wicket down
-              </BrutalBadge>
-            )}
+            {game.lastBall.out && <div className="nb-chip nb-chip--pink nb-chip--lg mt-2">Wicket down</div>}
           </PhaseBlock>
         )}
 
@@ -885,7 +904,7 @@ export default function HomePage() {
             </p>
           </PhaseBlock>
         )}
-      </BrutalCard>
+      </div>
     </main>
   );
 }
@@ -915,7 +934,7 @@ function BackButton({ onClick }: { onClick: () => void }) {
 function PhaseBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="brutal-heading mb-2 text-xl">{title}</h2>
+      <h3 className="nb-phase-heading">{title}</h3>
       {children}
     </div>
   );
@@ -940,11 +959,7 @@ function statusLabel(status: string) {
 
 function HandStatusBadge({ count }: { count: number | null }) {
   return (
-    <span
-      className={`brutal-border brutal-shadow-sm absolute bottom-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-display text-xs font-bold uppercase tracking-wide ${
-        count !== null ? "bg-brutal-mint text-black" : "bg-brutal-red text-white"
-      }`}
-    >
+    <span className={`nb-hand-badge ${count !== null ? "nb-hand-badge--ok" : "nb-hand-badge--none"}`}>
       {count !== null ? `✋ Sees ${count}` : "No hand seen"}
     </span>
   );
@@ -969,33 +984,30 @@ function FriendRow({
   onRemove: () => void;
 }) {
   return (
-    <div className="brutal-border flex items-center justify-between gap-2 rounded-lg bg-white/70 px-3 py-2">
-      <div className="flex items-center gap-2">
+    <div className="nb-friend-row">
+      <div className="nb-friend-left">
         <StatusDot status={status} />
         <div>
-          <p className="text-sm font-bold">{friend.nickname}</p>
-          <p className="text-xs text-black/40">{friend.username}</p>
+          <p className="nb-friend-name">{friend.nickname}</p>
+          <p className="nb-friend-user">{friend.username}</p>
         </div>
       </div>
       <div className="flex items-center gap-2">
         {outgoingStatus === "waiting" ? (
-          <button
-            className="brutal-border brutal-shadow-sm brutal-press cursor-pointer rounded-lg bg-white px-3 py-1.5 text-xs font-bold uppercase"
-            onClick={onCancelInvite}
-          >
+          <button className="nb-copy-btn" onClick={onCancelInvite}>
             Cancel
           </button>
         ) : (
-          <BrutalButton
-            tone={status === "online" ? "lime" : "white"}
-            className="px-3 py-1.5 text-xs"
+          <button
+            className="nb-btn nb-green"
+            style={{ padding: "6px 12px", fontSize: "12px" }}
             disabled={status !== "online"}
             onClick={onInvite}
           >
             {outgoingStatus === "declined" ? "Declined - retry" : "Invite"}
-          </BrutalButton>
+          </button>
         )}
-        <button className="text-xs text-black/40 underline" onClick={onRemove}>
+        <button className="nb-friend-remove" onClick={onRemove}>
           Remove
         </button>
       </div>
@@ -1004,13 +1016,9 @@ function FriendRow({
 }
 
 function StatusDot({ status }: { status: FriendStatus }) {
-  const color =
-    status === "online"
-      ? "bg-brutal-mint"
-      : status === "offline"
-        ? "bg-black/30"
-        : "bg-brutal-yellow";
-  return <span className={`inline-block h-2.5 w-2.5 rounded-full ${color}`} />;
+  const modifier =
+    status === "online" ? "nb-dot--online" : status === "offline" ? "nb-dot--offline" : "nb-dot--checking";
+  return <span className={`nb-dot ${modifier}`} />;
 }
 
 // The vs-computer opponent tile - it never had a camera, so instead of a

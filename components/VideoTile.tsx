@@ -7,7 +7,7 @@ interface VideoTileProps {
   label: string;
   mirrored?: boolean;
   muted?: boolean;
-  tone: "purple" | "coral";
+  tone: "self" | "peer";
   videoRef?: RefObject<HTMLVideoElement | null>;
   // Heavily blurs the feed and covers it with a reason badge - used on
   // the opponent's tile during the throw window so no one can just read
@@ -42,12 +42,10 @@ export function VideoTile({
     }
   }, [stream, videoRef]);
 
-  const borderTone = tone === "purple" ? "border-brutal-purple" : "border-brutal-coral";
-  const labelTone = tone === "purple" ? "bg-brutal-lime" : "bg-brutal-yellow";
-
   return (
     <div
-      className={`relative aspect-[4/3] w-full overflow-hidden rounded-2xl brutal-border brutal-shadow bg-black ${borderTone}`}
+      className="nb-video-tile"
+      style={{ borderColor: tone === "peer" ? "var(--nb-pink)" : "var(--nb-ink)" }}
     >
       {!placeholder && (
         <video
@@ -55,30 +53,18 @@ export function VideoTile({
           autoPlay
           playsInline
           muted={muted}
-          className={`h-full w-full object-cover transition-[filter,transform] duration-300 ease-out ${
-            mirrored ? "mirror" : ""
-          } ${blurred ? "scale-110 blur-2xl" : "scale-100 blur-0"}`}
+          className={`${mirrored ? "mirror" : ""} ${blurred ? "nb-blurred" : ""}`}
         />
       )}
       {placeholder && <div className="absolute inset-0">{placeholder}</div>}
-      {!stream && !placeholder && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 font-display text-sm uppercase tracking-wide text-white/70">
-          Waiting for camera…
-        </div>
-      )}
+      {!stream && !placeholder && <div className="nb-video-waiting">Waiting for camera…</div>}
       {blurred && stream && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/35 px-4 text-center">
+        <div className="nb-video-blur-overlay">
           <span className="text-3xl">🙈</span>
-          <span className="brutal-border brutal-shadow-sm rounded-full bg-brutal-yellow px-3 py-1 font-display text-[11px] font-bold uppercase tracking-wide text-black">
-            {blurReason}
-          </span>
+          <span className="nb-video-blur-chip">{blurReason}</span>
         </div>
       )}
-      <span
-        className={`absolute left-3 top-3 brutal-border brutal-shadow-sm rounded-full px-3 py-1 font-display text-xs font-bold uppercase tracking-wide text-black ${labelTone}`}
-      >
-        {label}
-      </span>
+      <span className="nb-video-label">{label}</span>
     </div>
   );
 }

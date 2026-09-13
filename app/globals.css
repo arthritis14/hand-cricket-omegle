@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -55,29 +56,14 @@
 }
 
 body {
-  background: var(--background);
+  /* Every screen has now migrated to the neobrutalist v2 system (see
+     below), so the old illustrated corner artwork this used to carry is
+     retired - the landing menu paints its own full-bleed yellow ground
+     (.nb-hero-bg) over this, and every other screen now wants this same
+     calm neutral canvas rather than busy illustration. */
+  background: var(--nb-bg, var(--background));
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-  /* Illustrated corner artwork instead of a hand-coded pattern - three
-     hand-drawn cricket motifs (a thrown ball top-right, a hand cricket
-     gesture bottom-left, a floodlit stadium bottom-right), cropped from
-     one reference piece and keyed so their cream backdrop drops out and
-     blends straight into the page's own cream base. Fixed so it doesn't
-     scroll with short pages. */
-  background-image:
-    url("/bg-ball.webp"),
-    url("/bg-hand.webp"),
-    url("/bg-stadium.webp");
-  background-size:
-    280px auto,
-    260px auto,
-    340px auto;
-  background-position:
-    top right,
-    bottom left,
-    bottom right;
-  background-attachment: fixed;
-  background-repeat: no-repeat, no-repeat, no-repeat;
 }
 
 /* ---- Neo-brutalist utility primitives ---- */
@@ -164,4 +150,588 @@ body {
    affecting the raw frames MediaPipe reads for detection. */
 .mirror {
   transform: scaleX(-1);
+}
+
+/* ================= Neobrutalist v2 - landing menu only =================
+   A second, deliberately separate design system (flat colour blocks, zero
+   border-radius, hard offset shadows, Syne/Space Grotesk/Inter/Space Mono)
+   scoped entirely to the nb- prefixed classes below. Only the landing
+   "menu" screen in app/page.tsx uses these for now - every other screen
+   still runs on the brutal-* system above until it gets its own design
+   pass, so the two systems intentionally coexist during the migration. */
+
+:root {
+  --nb-bg: #fffdf5;
+  --nb-yellow: #ffd23f;
+  --nb-pink: #ff6b6b;
+  --nb-blue: #74b9ff;
+  --nb-green: #88d498;
+  --nb-orange: #ffa552;
+  --nb-lavender: #b8a9fa;
+  --nb-ink: #000000;
+}
+
+.nb-hero-bg {
+  position: fixed;
+  inset: 0;
+  background: var(--nb-yellow);
+  z-index: -1;
+}
+
+.nb-hero-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.nb-badge {
+  position: relative;
+  z-index: 4;
+  width: fit-content;
+  margin-left: 24px;
+  margin-bottom: -16px;
+  padding: 7px 18px;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--nb-lavender);
+  border: 3px solid var(--nb-ink);
+  box-shadow: 3px 3px 0 0 var(--nb-ink);
+  transform: rotate(-4deg);
+}
+
+.nb-card {
+  position: relative;
+  z-index: 3;
+  background: #fff;
+  border: 4px solid var(--nb-ink);
+  box-shadow: 10px 10px 0 0 var(--nb-ink);
+  padding: 52px 44px;
+  text-align: center;
+}
+
+.nb-title {
+  margin: 0;
+  font-family: "Syne", ui-sans-serif, sans-serif;
+  font-weight: 800;
+  font-size: 52px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--nb-ink);
+}
+
+.nb-accent {
+  color: var(--nb-pink);
+}
+
+.nb-rule {
+  height: 7px;
+  width: 84px;
+  margin: 24px auto 0;
+  background: var(--nb-green);
+  border: 2px solid var(--nb-ink);
+}
+
+.nb-menu {
+  margin-top: 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.nb-btn {
+  cursor: pointer;
+  width: 100%;
+  padding: 18px 28px;
+  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  color: #000;
+  background: none;
+  border: 3px solid var(--nb-ink);
+  border-radius: 0;
+  box-shadow: 5px 5px 0 0 var(--nb-ink);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.nb-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 0 var(--nb-ink);
+}
+.nb-btn:active {
+  transform: translate(5px, 5px);
+  box-shadow: none;
+}
+.nb-btn:focus-visible {
+  outline: 3px solid var(--nb-blue);
+  outline-offset: 3px;
+}
+.nb-btn.nb-pink { background: var(--nb-pink); }
+.nb-btn.nb-green { background: var(--nb-green); }
+.nb-btn.nb-blue { background: var(--nb-blue); }
+
+.nb-motif-bat {
+  position: absolute;
+  z-index: 4;
+  bottom: -54px;
+  right: -40px;
+  width: 148px;
+  height: auto;
+  transform: rotate(9deg);
+}
+
+.nb-credit {
+  margin-top: 26px;
+  text-align: center;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+@media (max-width: 560px) {
+  .nb-card {
+    padding: 36px 24px;
+  }
+  .nb-title {
+    font-size: 34px;
+  }
+  .nb-motif-bat {
+    width: 104px;
+    bottom: -34px;
+    right: -22px;
+  }
+}
+
+/* ---- nb-btn colour + disabled variants beyond the three the hero uses ---- */
+.nb-btn.nb-orange { background: var(--nb-orange); }
+.nb-btn.nb-black { background: var(--nb-ink); color: #fff; }
+.nb-btn.nb-yellow { background: var(--nb-yellow); }
+.nb-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+  box-shadow: 5px 5px 0 0 var(--nb-ink);
+}
+
+/* ---- Private Match hub ---- */
+.nb-hub-wrap {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.nb-panel {
+  border: 3px solid var(--nb-ink);
+  background: var(--nb-lavender);
+  padding: 14px 16px;
+}
+
+.nb-panel-k {
+  margin: 0;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.nb-panel-sub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.nb-input {
+  width: 100%;
+  font-family: "Inter", ui-sans-serif, sans-serif;
+  font-size: 14px;
+  padding: 9px 12px;
+  background: #fff;
+  border: 3px solid var(--nb-ink);
+  border-radius: 0;
+}
+.nb-input:focus-visible {
+  outline: 3px solid var(--nb-blue);
+  outline-offset: 2px;
+}
+
+.nb-error-text {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--nb-pink);
+}
+
+.nb-username-row {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.nb-username {
+  margin: 0;
+  font-family: "Syne", ui-sans-serif, sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+.nb-copy-btn {
+  cursor: pointer;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #fff;
+  border: 3px solid var(--nb-ink);
+  box-shadow: 3px 3px 0 0 var(--nb-ink);
+  padding: 6px 12px;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.nb-copy-btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 0 var(--nb-ink); }
+.nb-copy-btn:active { transform: translate(3px, 3px); box-shadow: none; }
+
+.nb-invite-banner {
+  margin-top: 14px;
+  border: 3px solid var(--nb-ink);
+  box-shadow: 3px 3px 0 0 var(--nb-ink);
+  background: var(--nb-yellow);
+  padding: 12px 14px;
+}
+.nb-invite-banner p {
+  margin: 0 0 8px;
+  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+}
+.nb-invite-row {
+  display: flex;
+  gap: 8px;
+}
+.nb-invite-row .nb-btn {
+  flex: 1;
+  padding: 9px 12px;
+  font-size: 13px;
+}
+
+.nb-section-label {
+  margin: 0;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.nb-field-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.nb-empty-text {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.nb-friend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 3px solid var(--nb-ink);
+  background: #fff;
+  padding: 8px 12px;
+}
+.nb-friend-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nb-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--nb-ink);
+}
+.nb-dot--online { background: var(--nb-green); }
+.nb-dot--offline { background: #ccc; }
+.nb-dot--checking { background: var(--nb-yellow); }
+.nb-friend-name { margin: 0; font-weight: 700; font-size: 13px; }
+.nb-friend-user {
+  margin: 0;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.5);
+}
+.nb-friend-remove {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+/* ---- status / result cards (error, opponent-left, waiting, game-over) ---- */
+.nb-card--pink { background: var(--nb-pink); }
+.nb-card--orange { background: var(--nb-orange); }
+.nb-card--blue { background: var(--nb-blue); }
+.nb-card--green { background: var(--nb-green); }
+.nb-card--yellow { background: var(--nb-yellow); }
+
+.nb-status-text {
+  margin: 0;
+  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+.nb-status-sub {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.nb-status-badge {
+  display: inline-block;
+  margin: 0 auto 14px;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  background: var(--nb-yellow);
+  border: 3px solid var(--nb-ink);
+  box-shadow: 3px 3px 0 0 var(--nb-ink);
+  transform: rotate(-2deg);
+}
+.nb-status-badge--sm {
+  padding: 5px 12px;
+  font-size: 11px;
+  transform: rotate(2deg);
+}
+
+.nb-spinner {
+  margin: 22px auto 0;
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--nb-ink);
+  border-top-color: var(--nb-yellow);
+  border-radius: 999px;
+  animation: nb-spin 1s linear infinite;
+}
+@keyframes nb-spin {
+  to { transform: rotate(360deg); }
+}
+
+.nb-go-score {
+  display: flex;
+  justify-content: space-around;
+  margin: 18px 0;
+}
+.nb-go-who {
+  margin: 0;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.6);
+}
+.nb-go-runs {
+  margin: 0;
+  font-family: "Syne", ui-sans-serif, sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+/* ---- active match screen ---- */
+.nb-match-title {
+  margin: 0;
+  font-family: "Syne", ui-sans-serif, sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.nb-scoreboard {
+  background: #fff;
+  border: 3px solid var(--nb-ink);
+  box-shadow: 3px 3px 0 0 var(--nb-ink);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.nb-score-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.nb-score-who {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.55);
+}
+.nb-score-runs {
+  font-family: "Syne", ui-sans-serif, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+}
+.nb-score-out {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.4);
+}
+.nb-vs {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.35);
+}
+.nb-chip {
+  display: inline-block;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border: 2px solid var(--nb-ink);
+}
+.nb-chip--lg { padding: 4px 10px; font-size: 13px; }
+.nb-chip--green { background: var(--nb-green); }
+.nb-chip--pink { background: var(--nb-pink); }
+
+.nb-video-tile {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+  border: 3px solid var(--nb-ink);
+  box-shadow: 3px 3px 0 0 var(--nb-ink);
+}
+.nb-video-tile video {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  transition: filter 0.3s ease-out, transform 0.3s ease-out;
+}
+.nb-video-tile video.nb-blurred {
+  filter: blur(24px);
+  transform: scale(1.1);
+}
+.nb-video-label {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--nb-yellow);
+  border: 2px solid var(--nb-ink);
+  padding: 3px 9px;
+}
+.nb-video-waiting {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+}
+.nb-video-blur-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0 16px;
+  text-align: center;
+}
+.nb-video-blur-chip {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--nb-yellow);
+  border: 2px solid var(--nb-ink);
+  padding: 4px 10px;
+}
+
+.nb-hand-badge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 10;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 2px solid var(--nb-ink);
+  box-shadow: 2px 2px 0 0 var(--nb-ink);
+}
+.nb-hand-badge--ok { background: var(--nb-green); }
+.nb-hand-badge--none { background: var(--nb-pink); color: #fff; }
+
+.nb-countdown-badge {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.nb-countdown-badge > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 999px;
+  border: 4px solid var(--nb-ink);
+  box-shadow: 6px 6px 0 0 var(--nb-ink);
+  background: var(--nb-yellow);
+  font-family: "Syne", ui-sans-serif, sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+}
+
+.nb-phase-card {
+  background: var(--nb-lavender);
+  border: 4px solid var(--nb-ink);
+  box-shadow: 5px 5px 0 0 var(--nb-ink);
+  padding: 20px 18px;
+  text-align: left;
+}
+.nb-phase-heading {
+  margin: 0 0 10px;
+  font-family: "Syne", ui-sans-serif, sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  text-transform: uppercase;
+}
+.nb-phase-strong {
+  margin: 0;
+  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { BrutalCard, BrutalBadge } from "./Brutal";
 import type { GameState, Role } from "@/lib/gameEngine";
 
 export function Scoreboard({
@@ -17,24 +16,24 @@ export function Scoreboard({
   const nameFor = (role: Role) => (role === self ? selfName : peerName);
 
   return (
-    <BrutalCard tone="lilac" className="flex items-center justify-between gap-4 px-4 py-3">
+    <div className="nb-scoreboard">
       <ScoreLine
         name={nameFor("host")}
         record={state.innings.host}
         highlight={state.battingFirst !== null && state.currentInnings === (state.battingFirst === "host" ? 1 : 2)}
       />
-      <span className="font-display text-xs font-bold uppercase text-black/40">vs</span>
+      <span className="nb-vs">vs</span>
       <ScoreLine
         name={nameFor("guest")}
         record={state.innings.guest}
         highlight={state.battingFirst !== null && state.currentInnings === (state.battingFirst === "guest" ? 1 : 2)}
       />
       {state.currentInnings === 2 && state.battingFirst && (
-        <BrutalBadge tone="coral" className="hidden sm:inline-flex">
+        <div className="nb-chip nb-chip--pink hidden sm:inline-block">
           Target {state.innings[state.battingFirst].runs + 1}
-        </BrutalBadge>
+        </div>
       )}
-    </BrutalCard>
+    </div>
   );
 }
 
@@ -48,18 +47,16 @@ function ScoreLine({
   highlight: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center">
-      <span className="font-display text-xs font-bold uppercase tracking-wide text-black/60">
-        {name}
-      </span>
+    <div className="nb-score-line">
+      <span className="nb-score-who">{name}</span>
       {highlight && !record.isOut && (
-        <BrutalBadge tone="lime" className="mt-0.5 px-2 py-0.5 text-[10px]">
+        <div className="nb-chip nb-chip--green" style={{ marginTop: "1px" }}>
           Batting
-        </BrutalBadge>
+        </div>
       )}
-      <span className="font-display text-2xl font-bold text-black">
+      <span className="nb-score-runs">
         {record.runs}
-        {record.isOut && <span className="text-base text-black/40">*out</span>}
+        {record.isOut && <span className="nb-score-out"> *out</span>}
       </span>
     </div>
   );
