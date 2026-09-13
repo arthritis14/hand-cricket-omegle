@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Peer, { type DataConnection, type MediaConnection } from "peerjs";
 import type { GameMessage } from "./messages";
 import type { Role } from "./gameEngine";
+import { ICE_SERVERS } from "./iceServers";
 
 export type ConnectionStatus =
   | "idle"
@@ -29,47 +30,13 @@ export type RoomStrategy = "lobby" | "host" | "guest" | "solo";
 const PING_INTERVAL_MS = 2000;
 const RTT_SAMPLE_WINDOW = 5;
 
-// Google's public STUN servers, used to discover each player's public
-// address. STUN alone is only enough when at least one side has a
-// "normal" NAT - it can't punch through carrier-grade NAT (very common
-// on Indian mobile networks like Jio and Airtel), symmetric NAT, or a
-// locked-down corporate/campus wifi. For those, the two browsers can
-// still find each other fine (that's the signalling handshake through
-// PeerJS's cloud broker below, and it isn't affected by any of this) but
-// the actual peer-to-peer video/data link can never finish connecting -
-// which, from a player's seat, looks exactly like "we're not getting
-// matched" even though matching already happened. The free Open Relay
-// TURN servers are the fallback for that case: worst case, traffic
-// relays through them instead of going directly between the two
-// browsers.
-const ICE_SERVERS: RTCIceServer[] = [
-  { urls: "stun:stun.l.google.com:19302" },
-  { urls: "stun:stun1.l.google.com:19302" },
-  { urls: "stun:openrelay.metered.ca:80" },
-  {
-    urls: "turn:openrelay.metered.ca:80",
-    username: "openrelayproject",
-    credential: "openrelayproject",
-  },
-  {
-    urls: "turn:openrelay.metered.ca:443",
-    username: "openrelayproject",
-    credential: "openrelayproject",
-  },
-  {
-    urls: "turn:openrelay.metered.ca:443?transport=tcp",
-    username: "openrelayproject",
-    credential: "openrelayproject",
-  },
-];
-
 // How long to wait, once the two browsers have actually found each other
 // (a DataConnection object exists on both sides), for the underlying
 // video/data link to finish connecting before giving up and telling the
 // player something's wrong. Without this, a pair that found each other
 // but then failed to establish a connection (see the ICE_SERVERS comment
-// above) just sat on "waiting for opponent" forever, indistinguishable
-// from genuinely still waiting for someone to show up.
+// in iceServers.ts) just sat on "waiting for opponent" forever,
+// indistinguishable from genuinely still waiting for someone to show up.
 const CONNECT_TIMEOUT_MS = 15000;
 
 // How long to give signalling reconnection before giving up. PeerJS

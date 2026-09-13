@@ -5,6 +5,7 @@ import Peer, { type DataConnection } from "peerjs";
 import type { Friend } from "./friends";
 import { presenceIdFromUsername, type PresenceMessage } from "./presenceProtocol";
 import { generateRoomCode } from "./roomCode";
+import { ICE_SERVERS } from "./iceServers";
 
 // How often to re-check each friend's online status, and how long to wait
 // for a single check before giving up and calling them offline. Short
@@ -12,6 +13,15 @@ import { generateRoomCode } from "./roomCode";
 // free broker with connection attempts.
 const PROBE_INTERVAL_MS = 6000;
 const PROBE_TIMEOUT_MS = 4000;
+
+// How long to let an outgoing invite's connection attempt hang before
+// giving up on it. Without this, a connection that never fires "open"
+// AND never fires "error" (the same silent-hang failure mode as a stuck
+// getUserMedia() call - it can happen here too, on a network the ICE
+// negotiation can't punch through even with TURN available) just left
+// the sender staring at an "Invite" button that looked like it had never
+// been clicked, with no way to know anything had gone wrong.
+const INVITE_CONNECT_TIMEOUT_MS = 10000;
 
 export type FriendStatus = "checking" | "online" | "offline";
 
@@ -32,7 +42,7 @@ interface IncomingInvite {
 interface OutgoingInvite {
   toUsername: string;
   roomCode: string;
-  status: "waiting" | "declined";
+  status: "waiting" | "declined" | "failed";
 }
 
 interface AcceptedMatch {
@@ -70,6 +80,7 @@ export function usePresenceHub({ enabled, username, friends }: UsePresenceHubArg
   const presencePeerRef = useRef<Peer | null>(null);
   const incomingConnRef = useRef<DataConnection | null>(null);
   const outgoingConnRef = useRef<DataConnection | null>(null);
+  const outgoingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const friendsRef = useRef(friends);
   // Which username (if any) this hook currently holds a live claim for -
   // lets the auto-reclaim effect below tell "already claimed this one"
@@ -110,7 +121,15 @@ export function usePresenceHub({ enabled, username, friends }: UsePresenceHubArg
       if (!enabled || !name) return;
       presencePeerRef.current?.destroy();
       setClaimStatus("claiming");
-      const peer = new Peer(presenceIdFromUsername(name));
+      // Same TURN-backed ICE config as the match/video peer in
+      // usePeerRoom.ts - without it this peer silently fell back to
+      // PeerJS's STUN-only default, which is exactly why a friend could
+      // show "online" (a short-lived presence probe got lucky) while an
+      // actual invite - needing a slightly more durable connection -
+      // quietly never opened on a stricter network.
+      const peer = new Peer(presenceIdFromUsername(name), {
+        config: { iceServers: ICE_SERVERS },
+      });
       presencePeerRef.current = peer;
       wirePeer(peer);
 
@@ -199,6 +218,13 @@ export function usePresenceHub({ enabled, username, friends }: UsePresenceHubArg
     // probed without waiting for the next tick.
   }, [enabled, claimStatus, friends]);
 
+  const clearOutgoingTimeout = useCallback(() => {
+    if (outgoingTimeoutRef.current) {
+      clearTimeout(outgoingTimeoutRef.current);
+      outgoingTimeoutRef.current = null;
+    }
+  }, []);
+
   const sendInvite = useCallback(
     (toUsername: string) => {
       const peer = presencePeerRef.current;
@@ -206,9 +232,28 @@ export function usePresenceHub({ enabled, username, friends }: UsePresenceHubArg
       const roomCode = generateRoomCode();
       const conn = peer.connect(presenceIdFromUsername(toUsername), { reliable: true });
       outgoingConnRef.current = conn;
+      // Optimistic - flips the button to "Cancel" the instant this is
+      // called, rather than only once the connection finishes opening, so
+      // clicking Invite always visibly does *something* straight away.
+      setOutgoingInvite({ toUsername, roomCode, status: "waiting" });
+
+      clearOutgoingTimeout();
+      outgoingTimeoutRef.current = setTimeout(() => {
+        // The connection never opened and never errored either - the
+        // same silent-hang failure mode documented on
+        // INVITE_CONNECT_TIMEOUT_MS above. Surface it instead of leaving
+        // the sender stuck on "Cancel" forever with no way to tell it
+        // failed.
+        outgoingConnRef.current?.close();
+        outgoingConnRef.current = null;
+        setOutgoingInvite((s) =>
+          s && s.toUsername === toUsername ? { ...s, status: "failed" } : s
+        );
+      }, INVITE_CONNECT_TIMEOUT_MS);
+
       conn.on("open", () => {
+        clearOutgoingTimeout();
         conn.send({ type: "invite", roomCode, fromUsername: username });
-        setOutgoingInvite({ toUsername, roomCode, status: "waiting" });
       });
       conn.on("data", (data) => {
         const msg = data as PresenceMessage;
@@ -220,18 +265,22 @@ export function usePresenceHub({ enabled, username, friends }: UsePresenceHubArg
         }
       });
       conn.on("error", () => {
-        setOutgoingInvite(null);
+        clearOutgoingTimeout();
+        setOutgoingInvite((s) =>
+          s && s.toUsername === toUsername ? { ...s, status: "failed" } : s
+        );
       });
     },
-    [claimStatus, username]
+    [claimStatus, username, clearOutgoingTimeout]
   );
 
   const cancelOutgoingInvite = useCallback(() => {
+    clearOutgoingTimeout();
     outgoingConnRef.current?.send({ type: "invite-cancelled" });
     setTimeout(() => outgoingConnRef.current?.close(), 200);
     outgoingConnRef.current = null;
     setOutgoingInvite(null);
-  }, []);
+  }, [clearOutgoingTimeout]);
 
   const acceptInvite = useCallback(() => {
     if (!incomingInvite) return;

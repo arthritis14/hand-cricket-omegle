@@ -978,7 +978,7 @@ function FriendRow({
 }: {
   friend: Friend;
   status: FriendStatus;
-  outgoingStatus: "waiting" | "declined" | null;
+  outgoingStatus: "waiting" | "declined" | "failed" | null;
   onInvite: () => void;
   onCancelInvite: () => void;
   onRemove: () => void;
@@ -990,6 +990,11 @@ function FriendRow({
         <div>
           <p className="nb-friend-name">{friend.nickname}</p>
           <p className="nb-friend-user">{friend.username}</p>
+          {outgoingStatus === "failed" && (
+            <p className="nb-error-text" style={{ marginTop: "2px" }}>
+              Couldn&apos;t reach them - try again
+            </p>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -1004,7 +1009,11 @@ function FriendRow({
             disabled={status !== "online"}
             onClick={onInvite}
           >
-            {outgoingStatus === "declined" ? "Declined - retry" : "Invite"}
+            {outgoingStatus === "declined"
+              ? "Declined - retry"
+              : outgoingStatus === "failed"
+                ? "Retry"
+                : "Invite"}
           </button>
         )}
         <button className="nb-friend-remove" onClick={onRemove}>
