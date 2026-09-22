@@ -30,6 +30,58 @@ export type RoomStrategy = "lobby" | "host" | "guest" | "solo";
 const PING_INTERVAL_MS = 2000;
 const RTT_SAMPLE_WINDOW = 5;
 
+// Caps on what we send to the other player, in bits per second.
+//
+// Left uncapped, the browser's encoder ramps up to whatever the
+// connection allows - comfortably over 1.5 Mbps for a 640x480 feed of
+// someone waving their hand around, since encoders spend more bits on
+// high-motion footage. That matters here because when a match is relayed
+// through TURN (the common case on Indian mobile and CGNAT fibre, not a
+// rare one), every one of those bytes is metered twice by the relay,
+// once arriving and once leaving, in both directions. Uncapped, a
+// five-minute match can cost the relay quota ~240MB. At these caps it is
+// closer to ~50MB.
+//
+// The quality cost is close to zero in gameplay terms: hand detection
+// runs on each player's OWN local camera feed before anything is
+// transmitted, and the throw itself travels over the data channel as a
+// number. That is also why blurring the opponent's tile during the throw
+// window is safe. The video the opponent receives is there purely for
+// the social half of the game, so trading some sharpness for a relay
+// quota that lasts is a good deal.
+const VIDEO_MAX_BITRATE_BPS = 300_000;
+const AUDIO_MAX_BITRATE_BPS = 32_000;
+
+// Applies the caps above to whatever this peer is currently sending.
+// Called once media is actually flowing (the encoder's parameters get
+// reset during negotiation, so setting them earlier does not stick) and
+// again shortly after, because which of those two moments wins varies by
+// browser. Idempotent, so running it twice is harmless.
+async function capOutgoingBitrate(pc: RTCPeerConnection | null | undefined) {
+  if (!pc) return;
+  for (const sender of pc.getSenders()) {
+    const track = sender.track;
+    if (!track) continue;
+    const params = sender.getParameters();
+    // A sender with no encodings yet will reject setParameters outright,
+    // so give it one to populate.
+    if (!params.encodings || params.encodings.length === 0) {
+      params.encodings = [{}];
+    }
+    const cap =
+      track.kind === "video" ? VIDEO_MAX_BITRATE_BPS : AUDIO_MAX_BITRATE_BPS;
+    for (const encoding of params.encodings) {
+      encoding.maxBitrate = cap;
+    }
+    try {
+      await sender.setParameters(params);
+    } catch (err) {
+      // Not fatal - the call still works, it just costs more relay quota.
+      console.warn(`[bitrate] couldn't cap ${track.kind}`, err);
+    }
+  }
+}
+
 // How long to wait, once the two browsers have actually found each other
 // (a DataConnection object exists on both sides), for the underlying
 // video/data link to finish connecting before giving up and telling the
@@ -350,6 +402,11 @@ export function usePeerRoom({ onMessage, enabled, strategy, roomId }: UsePeerRoo
           gotStream = true;
           console.log("[video call] stream received");
           if (!cancelled) setRemoteStream(stream);
+          // See capOutgoingBitrate's comment for why this runs twice.
+          void capOutgoingBitrate(call.peerConnection);
+          setTimeout(() => {
+            if (!cancelled) void capOutgoingBitrate(call.peerConnection);
+          }, 3000);
         });
 
         // Same idea as the data channel above - a completely separate ICE
