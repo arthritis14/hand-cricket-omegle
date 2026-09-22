@@ -1,6 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  IconArrowLeft,
+  IconCheck,
+  IconCopy,
+  IconHandStop,
+  IconLock,
+  IconRobot,
+  IconTrophy,
+  IconUserPlus,
+  IconWorld,
+  IconX,
+} from "@tabler/icons-react";
 import { VideoTile } from "@/components/VideoTile";
 import { Countdown } from "@/components/Countdown";
 import { Scoreboard } from "@/components/Scoreboard";
@@ -34,6 +46,17 @@ const COUNTDOWN_MS = 3000; // 3, 2, 1
 const RESULT_PAUSE_MS = 2400;
 const BREAK_PAUSE_MS = 3400;
 const SELF_LABEL = "You";
+
+// One stroke weight for every icon on the site, set here rather than per
+// use so nothing drifts thinner than the 3px borders around it.
+const ICON_STROKE = 2.4;
+
+// The illustrations. Generated for this site rather than stock, so the
+// palette in globals.css and the art are sampled from each other.
+const ART_KIT =
+  "https://cdn.gamma.app/hc6lzg3dk8ql7jy/design-anything/ERXDKWkGNAgsSevviC2zV/jxKiHnPPm8XtiaUn2XDxN.jpg";
+const ART_EMPTY_GULLY =
+  "https://cdn.gamma.app/hc6lzg3dk8ql7jy/design-anything/eO4ws510oCtZ7mzWfFfI3/E0sh_gQAEkLmwfFupw6iv.jpg";
 
 // The three ways to play. "stranger" and the two "private-*" modes are
 // real peer-to-peer matches over video; "computer" never talks to another
@@ -444,20 +467,19 @@ export default function HomePage() {
   const isSelfBatting = role !== null && batter === role;
   const opponentRole: Role | null = role ? other(role) : null;
 
-  // The stranger's camera is the one place someone could cheat: since the
-  // raw video feed is right there on screen, a player could just wait to
-  // see what number the other person's hand is showing and copy it before
-  // locking in their own throw. Blurring their tile for the whole throw
-  // window - from the 3-2-1 countdown through the lock-in step - closes
-  // that off. There's no such risk against the computer (it never had a
-  // camera to peek at), so it's never blurred there.
-  const strangerBlurred =
+  // The opponent's camera is the one place someone could cheat: the raw
+  // feed is right there, so a player could wait to see what the other
+  // person's hand is showing and copy it before locking in. Dropping the
+  // sightscreen over their tile for the whole throw window - from the
+  // 3-2-1 through the lock-in - closes that off. No such risk against the
+  // computer (it never had a camera to peek at), so it stays up there.
+  const shuttered =
     mode !== "computer" &&
     (game.phase === "throw-countdown" || game.phase === "throw-capture");
-  const blurReason =
+  const shutterReason =
     game.phase === "throw-countdown"
-      ? "Hidden until the throw"
-      : "Hidden until you both lock in";
+      ? "Up until the throw"
+      : "Up until you both lock in";
 
   const beginMode = (m: "stranger" | "computer") => {
     setMode(m);
@@ -467,89 +489,80 @@ export default function HomePage() {
   // --- Render states ---
 
   if (!started && homeView === "menu") {
-    // The landing menu - restyled to the new neobrutalist system (see the
-    // "Neobrutalist v2" block in globals.css). Scoped to just this screen
-    // via the nb- prefixed classes below; every other screen (including
-    // the Private Match hub right after this block) still runs on the
-    // original brutal-* system until its own section gets designed and
-    // approved.
     return (
       <>
-        <div className="nb-hero-bg" />
-        <Centered>
-          <div className="nb-hero-wrap">
-            <svg
-              className="nb-motif-bat"
-              viewBox="0 0 232 385"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <polygon points="42,150 158,150 158,320 100,362 42,320" fill="#E8C39E" />
-              <polygon points="42,150 78,150 78,320 55,345 42,320" fill="#C9975F" />
-              <polygon
-                points="42,150 158,150 158,320 100,362 42,320"
-                fill="none"
-                stroke="#000"
-                strokeWidth="6"
-                strokeLinejoin="round"
-              />
-              <polygon points="70,340 100,362 78,350" fill="#00000022" />
-              <polygon
-                points="87,122 113,122 158,150 42,150"
-                fill="#FF6B6B"
-                stroke="#000"
-                strokeWidth="6"
-                strokeLinejoin="round"
-              />
-              <rect x="87" y="20" width="26" height="102" rx="13" fill="#FF6B6B" stroke="#000" strokeWidth="6" />
-              <g stroke="#7A1F1F" strokeWidth="3.5" strokeLinecap="round">
-                <line x1="90" y1="32" x2="110" y2="40" />
-                <line x1="90" y1="48" x2="110" y2="56" />
-                <line x1="90" y1="64" x2="110" y2="72" />
-                <line x1="90" y1="80" x2="110" y2="88" />
-                <line x1="90" y1="96" x2="110" y2="104" />
-              </g>
-              <rect x="87" y="4" width="26" height="18" rx="3" fill="#7A1F1F" stroke="#000" strokeWidth="5" />
-              <circle cx="185" cy="336" r="40" fill="#FF6B6B" stroke="#000" strokeWidth="6" />
-              <path
-                d="M 185 298 A 40 40 0 0 1 185 374"
-                fill="none"
-                stroke="#FFFDF5"
-                strokeWidth="3.5"
-                strokeDasharray="6 5"
-              />
-              <path
-                d="M 178 298 A 40 42 0 0 0 178 374"
-                fill="none"
-                stroke="#FFFDF5"
-                strokeWidth="3.5"
-                strokeDasharray="6 5"
-              />
-            </svg>
+        <div className="gc-ground" />
+        <div className="gc-page">
+        <div className="gc-screen-wrap">
+          <div className="gc-center">
+            <div className="gc-hero">
+              <div className="gc-stagger flex flex-col items-start gap-5">
+                <span className="gc-badge gc-badge--red">
+                  <IconHandStop size={13} stroke={ICON_STROKE} /> Live on camera
+                </span>
 
-            <div className="nb-badge">✋ vs ✋, live</div>
-            <div className="nb-card">
-              <h1 className="nb-title">
-                Hand<span className="nb-accent">Cricket</span>
-                <br />
-                Omegle
-              </h1>
-              <div className="nb-rule" />
-              <div className="nb-menu">
-                <button className="nb-btn nb-pink" onClick={() => setHomeView("private-hub")}>
-                  🔒 Private Match
-                </button>
-                <button className="nb-btn nb-green" onClick={() => beginMode("stranger")}>
-                  🌍 2 Player
-                </button>
-                <button className="nb-btn nb-blue" onClick={() => beginMode("computer")}>
-                  🤖 One Player
-                </button>
+                <h1 className="gc-display">
+                  Hand <span className="gc-accent">Cricket</span> Omegle
+                </h1>
+
+                <p className="gc-lede">
+                  Get matched with a stranger. Throw your hand at the camera.
+                  The site does the umpiring.
+                </p>
+
+                <div className="flex w-full flex-col gap-3">
+                  <button
+                    className="gc-btn gc-btn--lg gc-btn--red"
+                    onClick={() => beginMode("stranger")}
+                  >
+                    <IconWorld size={24} stroke={ICON_STROKE} />
+                    Play a stranger
+                  </button>
+                  <button
+                    className="gc-btn gc-btn--lg gc-btn--yellow"
+                    onClick={() => setHomeView("private-hub")}
+                  >
+                    <IconLock size={24} stroke={ICON_STROKE} />
+                    Play a friend
+                  </button>
+                  <button
+                    className="gc-btn gc-btn--lg"
+                    onClick={() => beginMode("computer")}
+                  >
+                    <IconRobot size={24} stroke={ICON_STROKE} />
+                    Play the computer
+                  </button>
+                </div>
               </div>
+
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="gc-hero-art"
+                src={ART_KIT}
+                alt="A cricket bat, ball and stumps drawn in flat bright colours"
+              />
             </div>
-            <p className="nb-credit">A Vilicon Salley Production</p>
           </div>
-        </Centered>
+
+          <p className="gc-credit mt-6 mb-3 text-center">
+            A Vilicon Salley Production
+          </p>
+        </div>
+
+        <div className="gc-ticker">
+          <div className="gc-ticker-track" aria-hidden="true">
+            {[0, 1].map((copy) => (
+              <div className="flex" key={copy}>
+                <span>Odd or even</span>
+                <span>Your camera is the umpire</span>
+                <span>Six and out</span>
+                <span>No sign up</span>
+                <span>One ball at a time</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        </div>
       </>
     );
   }
@@ -557,142 +570,174 @@ export default function HomePage() {
   if (!started) {
     return (
       <>
+        <div className="gc-ground gc-ground--cream" />
         <BackButton onClick={() => setHomeView("menu")} />
-        <Centered>
-          <div className="nb-hub-wrap">
-            <div className="nb-badge">✋ vs ✋, live</div>
-            <div className="nb-card" style={{ textAlign: "left" }}>
-              <h1 className="nb-title" style={{ fontSize: "32px", textAlign: "center" }}>
-                Hand<span className="nb-accent">Cricket</span>
-                <br />
-                Omegle
-              </h1>
-              <div className="nb-rule" />
+        <div className="gc-screen-wrap">
+          <div className="gc-center">
+            <div className="gc-win gc-enter w-full max-w-md">
+              <div className="gc-win-bar">
+                <span className="gc-win-dots" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <span className="gc-win-title">Play a friend</span>
+              </div>
 
-              {!username && (
-                <div className="nb-panel mt-4">
-                  <p className="nb-panel-k">Create your account</p>
-                  <p className="nb-panel-sub">
-                    Pick a username - this is what friends will use to add you
-                    and invite you straight into a match.
-                  </p>
-                  <input
-                    value={usernameInput}
-                    onChange={(e) => setUsernameInput(normalizeUsername(e.target.value))}
-                    placeholder="username"
-                    maxLength={16}
-                    className="nb-input mt-3"
-                  />
-                  <button
-                    className="nb-btn nb-yellow w-full mt-2"
-                    style={{ fontSize: "14px", padding: "12px 20px" }}
-                    disabled={!isValidUsername(usernameInput) || presence.claimStatus === "claiming"}
-                    onClick={handleCreateAccount}
-                  >
-                    {presence.claimStatus === "claiming" ? "Checking…" : "Create account"}
-                  </button>
-                  {presence.claimStatus === "taken" && (
-                    <p className="nb-error-text">
-                      That username&apos;s taken right now - try another.
-                    </p>
-                  )}
-                  {presence.claimStatus === "error" && (
-                    <p className="nb-error-text">
-                      Couldn&apos;t reach the network - check your connection and try again.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {username && (
-                <div className="mt-4">
-                  <div className="nb-panel">
-                    <p className="nb-panel-k">Your username</p>
-                    <div className="nb-username-row">
-                      <p className="nb-username">{username}</p>
-                      <button className="nb-copy-btn" onClick={handleCopyUsername}>
-                        Copy
-                      </button>
+              <div className="flex flex-col gap-4 p-4">
+                {!username && (
+                  <>
+                    <div>
+                      <h1 className="gc-display gc-display--sm">Pick a name</h1>
+                      <p className="gc-lede mt-2">
+                        Friends add you by this name and drop you straight into
+                        a match.
+                      </p>
                     </div>
-                    <p className="nb-panel-sub">
-                      Share this so a friend can add you and invite you straight
-                      into a match.
-                    </p>
-                  </div>
+                    <div className="gc-panel gc-panel--lime">
+                      <input
+                        value={usernameInput}
+                        onChange={(e) => setUsernameInput(normalizeUsername(e.target.value))}
+                        placeholder="yourname"
+                        maxLength={16}
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        className="gc-input"
+                      />
+                      <button
+                        className="gc-btn gc-btn--red mt-3 w-full"
+                        disabled={
+                          !isValidUsername(usernameInput) ||
+                          presence.claimStatus === "claiming"
+                        }
+                        onClick={handleCreateAccount}
+                      >
+                        {presence.claimStatus === "claiming" ? "Checking" : "Claim it"}
+                      </button>
+                      {presence.claimStatus === "taken" && (
+                        <p className="gc-error">
+                          Someone is using that right now. Try another.
+                        </p>
+                      )}
+                      {presence.claimStatus === "error" && (
+                        <p className="gc-error">
+                          Could not reach the network. Check your connection.
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
 
-                  {presence.incomingInvite && (
-                    <div className="nb-invite-banner">
-                      <p>{presence.incomingInvite.fromUsername} wants to play!</p>
-                      <div className="nb-invite-row">
-                        <button className="nb-btn nb-green" onClick={presence.acceptInvite}>
-                          Accept
-                        </button>
-                        <button className="nb-btn nb-black" onClick={presence.declineInvite}>
-                          Decline
+                {username && (
+                  <>
+                    <div className="gc-panel gc-panel--lime">
+                      <p className="gc-label">You are</p>
+                      <div className="mt-1 flex items-center justify-between gap-3">
+                        <p className="gc-username">{username}</p>
+                        <button
+                          className="gc-btn gc-btn--sm"
+                          onClick={handleCopyUsername}
+                        >
+                          <IconCopy size={14} stroke={ICON_STROKE} />
+                          Copy
                         </button>
                       </div>
                     </div>
-                  )}
 
-                  <div className="mt-4">
-                    <p className="nb-section-label">Add a friend</p>
-                    <div className="nb-field-row">
-                      <input
-                        value={friendUsernameInput}
-                        onChange={(e) => setFriendUsernameInput(normalizeUsername(e.target.value))}
-                        placeholder="Their username"
-                        maxLength={16}
-                        className="nb-input"
-                      />
-                      <input
-                        value={friendNicknameInput}
-                        onChange={(e) => setFriendNicknameInput(e.target.value)}
-                        placeholder="Name (optional)"
-                        maxLength={20}
-                        className="nb-input"
-                      />
-                    </div>
-                    <button
-                      className="nb-btn nb-orange w-full mt-2"
-                      style={{ fontSize: "14px", padding: "12px 20px" }}
-                      disabled={
-                        !isValidUsername(normalizeUsername(friendUsernameInput)) ||
-                        normalizeUsername(friendUsernameInput) === username
-                      }
-                      onClick={handleAddFriend}
-                    >
-                      Add friend
-                    </button>
-                  </div>
-
-                  <div className="mt-4">
-                    <p className="nb-section-label">Friends</p>
-                    {friends.length === 0 && (
-                      <p className="nb-empty-text">No friends saved yet.</p>
+                    {presence.incomingInvite && (
+                      <div className="gc-panel gc-panel--yellow">
+                        <p className="gc-label">Incoming</p>
+                        <p className="gc-username mt-1">
+                          {presence.incomingInvite.fromUsername}
+                        </p>
+                        <div className="mt-3 flex gap-3">
+                          <button
+                            className="gc-btn gc-btn--red flex-1"
+                            onClick={presence.acceptInvite}
+                          >
+                            <IconCheck size={18} stroke={ICON_STROKE} />
+                            Play
+                          </button>
+                          <button
+                            className="gc-btn gc-btn--sm"
+                            onClick={presence.declineInvite}
+                          >
+                            <IconX size={14} stroke={ICON_STROKE} />
+                            No
+                          </button>
+                        </div>
+                      </div>
                     )}
-                    <div className="mt-2 flex flex-col gap-2">
-                      {friends.map((friend) => (
-                        <FriendRow
-                          key={friend.username}
-                          friend={friend}
-                          status={presence.statuses[friend.username] ?? "checking"}
-                          outgoingStatus={
-                            presence.outgoingInvite?.toUsername === friend.username
-                              ? presence.outgoingInvite.status
-                              : null
+
+                    <div>
+                      <p className="gc-label">Add a friend</p>
+                      <div className="mt-2 flex flex-col gap-2">
+                        <input
+                          value={friendUsernameInput}
+                          onChange={(e) =>
+                            setFriendUsernameInput(normalizeUsername(e.target.value))
                           }
-                          onInvite={() => presence.sendInvite(friend.username)}
-                          onCancelInvite={presence.cancelOutgoingInvite}
-                          onRemove={() => handleRemoveFriend(friend.username)}
+                          placeholder="their name"
+                          maxLength={16}
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          className="gc-input"
                         />
-                      ))}
+                        <input
+                          value={friendNicknameInput}
+                          onChange={(e) => setFriendNicknameInput(e.target.value)}
+                          placeholder="what you call them (optional)"
+                          maxLength={20}
+                          className="gc-input"
+                        />
+                        <button
+                          className="gc-btn gc-btn--yellow w-full"
+                          disabled={
+                            !isValidUsername(normalizeUsername(friendUsernameInput)) ||
+                            normalizeUsername(friendUsernameInput) === username
+                          }
+                          onClick={handleAddFriend}
+                        >
+                          <IconUserPlus size={18} stroke={ICON_STROKE} />
+                          Add
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
+
+                    <div>
+                      <p className="gc-label">Your list</p>
+                      {friends.length === 0 ? (
+                        <p className="gc-lede mt-2">
+                          Nobody yet. Add someone by the name they picked.
+                        </p>
+                      ) : (
+                        <div className="mt-2 flex flex-col gap-2">
+                          {friends.map((friend) => (
+                            <FriendRow
+                              key={friend.username}
+                              friend={friend}
+                              status={presence.statuses[friend.username] ?? "checking"}
+                              outgoingStatus={
+                                presence.outgoingInvite?.toUsername === friend.username
+                                  ? presence.outgoingInvite.status
+                                  : null
+                              }
+                              onInvite={() => presence.sendInvite(friend.username)}
+                              onCancelInvite={presence.cancelOutgoingInvite}
+                              onRemove={() => handleRemoveFriend(friend.username)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </Centered>
+        </div>
       </>
     );
   }
@@ -700,15 +745,22 @@ export default function HomePage() {
   if (error || status === "failed") {
     return (
       <>
+        <div className="gc-ground gc-ground--cream" />
         <BackButton onClick={leaveToMenu} />
-        <Centered>
-          <div className="nb-card nb-card--pink w-full max-w-sm">
-            <p className="nb-status-text">{error ?? "Something went wrong."}</p>
-            <button className="nb-btn nb-yellow w-full mt-4" onClick={() => window.location.reload()}>
-              Try again
-            </button>
+        <div className="gc-screen-wrap">
+          <div className="gc-center">
+            <div className="gc-card gc-card--red gc-enter w-full max-w-md">
+              <h1 className="gc-display gc-display--sm">Rain stopped play</h1>
+              <p className="gc-lede mt-3">{error ?? "Something went wrong."}</p>
+              <button
+                className="gc-btn gc-btn--yellow mt-5 w-full"
+                onClick={() => window.location.reload()}
+              >
+                Try again
+              </button>
+            </div>
           </div>
-        </Centered>
+        </div>
       </>
     );
   }
@@ -716,258 +768,325 @@ export default function HomePage() {
   if (status === "opponent-left") {
     return (
       <>
+        <div className="gc-ground gc-ground--cream" />
         <BackButton onClick={leaveToMenu} />
-        <Centered>
-          <div className="nb-card nb-card--orange w-full max-w-sm">
-            <p className="nb-status-text">Your opponent left the match.</p>
-            <button className="nb-btn nb-black w-full mt-4" onClick={() => window.location.reload()}>
-              Find a new match
-            </button>
+        <div className="gc-screen-wrap">
+          <div className="gc-center">
+            <div className="gc-card gc-card--yellow gc-enter w-full max-w-md">
+              <h1 className="gc-display gc-display--sm">They walked off</h1>
+              <p className="gc-lede mt-3">
+                Your opponent left mid match. Their loss.
+              </p>
+              <button
+                className="gc-btn gc-btn--red mt-5 w-full"
+                onClick={() => window.location.reload()}
+              >
+                Find someone else
+              </button>
+            </div>
           </div>
-        </Centered>
+        </div>
       </>
     );
   }
 
   if (status !== "connected" || !role || game.phase === "lobby") {
+    const waitingForStranger = status === "waiting-for-opponent" && mode === "stranger";
     return (
       <>
+        <div className="gc-ground gc-ground--cream" />
         <BackButton onClick={leaveToMenu} />
-        <Centered>
-          <div className="nb-card nb-card--blue w-full max-w-md">
-            <div className="nb-status-badge">Hand Cricket Omegle</div>
-            <p className="nb-status-text mt-4">{statusLabel(status)}</p>
-            {status === "waiting-for-opponent" && mode === "stranger" && (
-              <p className="nb-status-sub mt-3">
-                Have your friend open this same site and hit play - you&apos;ll
-                be matched automatically.
-              </p>
-            )}
-            {status === "waiting-for-opponent" &&
-              (mode === "private-host" || mode === "private-guest") && (
-                <p className="nb-status-sub mt-3">Connecting you into the match…</p>
+        <div className="gc-screen-wrap">
+          <div className="gc-center">
+            <div className="gc-win gc-enter w-full max-w-md">
+              <div className="gc-win-bar">
+                <span className="gc-win-dots" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <span className="gc-win-title">{statusTitle(status)}</span>
+              </div>
+
+              {waitingForStranger && (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={ART_EMPTY_GULLY}
+                  alt="An empty street cricket pitch with stumps chalked on a wall"
+                  className="block w-full border-b-[3px] border-black"
+                  style={{ aspectRatio: "1 / 1", objectFit: "cover" }}
+                />
               )}
-            {status === "waiting-for-opponent" && <div className="nb-spinner" />}
+
+              <div className="p-5 text-center">
+                <h1 className="gc-display gc-display--sm">{statusHeading(status)}</h1>
+                <p className="gc-lede mx-auto mt-3">{statusBody(status, mode)}</p>
+                {status === "waiting-for-opponent" && (
+                  <div className="gc-stumps" aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </Centered>
+        </div>
       </>
     );
   }
 
   if (game.phase === "game-over") {
     const won = game.winner === role;
-    const winnerLabel = game.winner === "tie" ? "It's a tie." : won ? "You won!" : "You lost.";
-    const toneClass =
-      game.winner === "tie" ? "nb-card--yellow" : won ? "nb-card--green" : "nb-card--pink";
+    const tone =
+      game.winner === "tie" ? "gc-card--yellow" : won ? "gc-card--lime" : "gc-card--red";
+    const heading =
+      game.winner === "tie" ? "Dead heat" : won ? "You won" : "You lost";
     return (
-      <Centered>
-        <div className={`nb-card ${toneClass} w-full max-w-sm`}>
-          <div className="nb-status-badge">Match over</div>
-          <h1 className="nb-title" style={{ fontSize: "34px" }}>
-            {winnerLabel}
-          </h1>
-          <div className="nb-go-score">
-            <div>
-              <p className="nb-go-who">{SELF_LABEL}</p>
-              <p className="nb-go-runs">{game.innings[role].runs}</p>
-            </div>
-            <div>
-              <p className="nb-go-who">{PEER_LABEL}</p>
-              <p className="nb-go-runs">
-                {opponentRole ? game.innings[opponentRole].runs : 0}
-              </p>
+      <>
+        <div className="gc-ground gc-ground--cream" />
+        <div className="gc-screen-wrap">
+          <div className="gc-center">
+            <div className={`gc-card ${tone} gc-enter w-full max-w-md text-center`}>
+              <span className="gc-badge">
+                <IconTrophy size={13} stroke={ICON_STROKE} /> Match over
+              </span>
+              <h1 className="gc-display mt-4">{heading}</h1>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <FinalScore label={SELF_LABEL} runs={game.innings[role].runs} />
+                <FinalScore
+                  label={PEER_LABEL}
+                  runs={opponentRole ? game.innings[opponentRole].runs : 0}
+                />
+              </div>
+
+              <button
+                className="gc-btn gc-btn--ink mt-6 w-full"
+                onClick={() => window.location.reload()}
+              >
+                Play again
+              </button>
             </div>
           </div>
-          <button className="nb-btn nb-black w-full mt-2" onClick={() => window.location.reload()}>
-            Find a new match
-          </button>
         </div>
-      </Centered>
+      </>
     );
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-6">
-      <div className="flex items-center justify-between">
-        <h2 className="nb-match-title">Hand Cricket</h2>
-        {rtt !== null && <div className="nb-status-badge nb-status-badge--sm">Ping {rtt}ms</div>}
-      </div>
-
-      <Scoreboard state={game} self={role} selfName={SELF_LABEL} peerName={PEER_LABEL} />
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="relative">
-          <VideoTile
-            stream={localStream}
-            label={`${SELF_LABEL}`}
-            mirrored
-            muted
-            tone="self"
-            videoRef={localVideoRef}
-          />
-          {game.phase === "throw-countdown" && <Countdown label={countdownLabel} />}
-          {detectorReady && <HandStatusBadge count={liveHandCount} />}
+    <>
+      <div className="gc-pitch" />
+      <main className="gc-screen-wrap mx-auto w-full max-w-2xl gap-4">
+        <div className="flex items-center justify-between gap-3">
+          <span className="gc-badge gc-badge--lime">
+            <IconHandStop size={13} stroke={ICON_STROKE} /> Hand Cricket
+          </span>
+          {rtt !== null && <span className="gc-badge">{rtt}ms</span>}
         </div>
-        <VideoTile
-          stream={remoteStream}
-          label={PEER_LABEL}
-          tone="peer"
-          blurred={strangerBlurred}
-          blurReason={blurReason}
-          placeholder={mode === "computer" ? <ComputerFace lastValue={computerLastThrow} /> : undefined}
-        />
-      </div>
 
-      <div className="nb-phase-card flex-1">
-        {game.phase === "toss-call" && (
-          <PhaseBlock title="The toss">
-            {role === "guest" ? (
-              <>
-                <p className="mb-3 text-sm">Call it before you both throw:</p>
-                <div className="flex gap-3">
-                  <button className="nb-btn nb-green" onClick={() => handleTossCall("odd")}>
-                    Odd
+        <div className="mt-3">
+          <Scoreboard state={game} self={role} selfName={SELF_LABEL} peerName={PEER_LABEL} />
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="relative">
+            <VideoTile
+              stream={localStream}
+              label={SELF_LABEL}
+              mirrored
+              muted
+              tone="self"
+              videoRef={localVideoRef}
+            />
+            {game.phase === "throw-countdown" && <Countdown label={countdownLabel} />}
+            {detectorReady && <HandStatusBadge count={liveHandCount} />}
+          </div>
+          <VideoTile
+            stream={remoteStream}
+            label={PEER_LABEL}
+            tone="peer"
+            shuttered={shuttered}
+            shutterReason={shutterReason}
+            placeholder={
+              mode === "computer" ? <ComputerFace lastValue={computerLastThrow} /> : undefined
+            }
+          />
+        </div>
+
+        <div className="mt-3 flex-1">
+          {game.phase === "toss-call" && (
+            <div className="gc-phase gc-phase--yellow">
+              <h2 className="gc-phase-head">The toss</h2>
+              {role === "guest" ? (
+                <>
+                  <p className="gc-phase-body">Call it before you both throw.</p>
+                  <div className="gc-phase-row">
+                    <button className="gc-btn gc-btn--red" onClick={() => handleTossCall("odd")}>
+                      Odd
+                    </button>
+                    <button className="gc-btn gc-btn--blue" onClick={() => handleTossCall("even")}>
+                      Even
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p className="gc-phase-body">
+                  {PEER_LABEL} is calling odd or even.
+                </p>
+              )}
+            </div>
+          )}
+
+          {(game.phase === "throw-ready" || game.phase === "throw-countdown") && (
+            <div className="gc-phase gc-phase--lime">
+              <h2 className="gc-phase-head">
+                {game.throwKind === "toss" ? "Toss throw" : "Ball incoming"}
+              </h2>
+              <p className="gc-phase-body">
+                Hand up in frame. The throw happens on one.
+              </p>
+            </div>
+          )}
+
+          {game.phase === "throw-capture" && (
+            <div className="gc-phase">
+              <h2 className="gc-phase-head">Reading hands</h2>
+              <p className="gc-phase-body">Both throws are locked in.</p>
+            </div>
+          )}
+
+          {game.phase === "toss-result" && game.tossWinner && (
+            <div className="gc-phase gc-phase--yellow">
+              <h2 className="gc-phase-head">
+                {game.tossWinner === role ? "You won the toss" : `${PEER_LABEL} won the toss`}
+              </h2>
+              <p className="gc-phase-body">
+                You threw {game.ownValue}. They threw {game.peerValue}.
+              </p>
+            </div>
+          )}
+
+          {game.phase === "choose-side" && (
+            <div className="gc-phase gc-phase--lime">
+              <h2 className="gc-phase-head">Bat or bowl</h2>
+              {game.tossWinner === role ? (
+                <div className="gc-phase-row">
+                  <button className="gc-btn gc-btn--red" onClick={() => handleChooseSide("bat")}>
+                    Bat
                   </button>
-                  <button className="nb-btn nb-orange" onClick={() => handleTossCall("even")}>
-                    Even
+                  <button className="gc-btn gc-btn--blue" onClick={() => handleChooseSide("bowl")}>
+                    Bowl
                   </button>
                 </div>
-              </>
-            ) : (
-              <WaitingLine label={PEER_LABEL} action="to call odd or even" />
-            )}
-          </PhaseBlock>
-        )}
-
-        {(game.phase === "throw-ready" || game.phase === "throw-countdown") && (
-          <PhaseBlock title={game.throwKind === "toss" ? "Toss throw" : "Ball incoming"}>
-            <p className="text-sm text-black/60">
-              Get your hand ready in frame - the throw happens on 1.
-            </p>
-          </PhaseBlock>
-        )}
-
-        {game.phase === "throw-capture" && (
-          <PhaseBlock title="Reading throws">
-            <p className="text-sm text-black/60">
-              Throws locked in - working out what happened…
-            </p>
-          </PhaseBlock>
-        )}
-
-        {game.phase === "toss-result" && game.tossWinner && (
-          <PhaseBlock title="Toss result">
-            <p className="nb-phase-strong">
-              You threw {game.ownValue} - they threw {game.peerValue}.
-            </p>
-            <div className={`nb-chip mt-2 ${game.tossWinner === role ? "nb-chip--green" : "nb-chip--pink"}`}>
-              {game.tossWinner === role ? "You" : PEER_LABEL} won the toss
+              ) : (
+                <p className="gc-phase-body">{PEER_LABEL} is choosing.</p>
+              )}
             </div>
-          </PhaseBlock>
-        )}
+          )}
 
-        {game.phase === "choose-side" && (
-          <PhaseBlock title="Bat or bowl?">
-            {game.tossWinner === role ? (
-              <div className="flex gap-3">
-                <button className="nb-btn nb-green" onClick={() => handleChooseSide("bat")}>
-                  Bat first
-                </button>
-                <button className="nb-btn nb-blue" onClick={() => handleChooseSide("bowl")}>
-                  Bowl first
-                </button>
-              </div>
-            ) : (
-              <WaitingLine label={PEER_LABEL} action="to choose bat or bowl" />
-            )}
-          </PhaseBlock>
-        )}
+          {game.phase === "ball-result" && game.lastBall && (
+            <div className={`gc-phase ${game.lastBall.out ? "gc-phase--red" : "gc-phase--lime"}`}>
+              <h2 className="gc-phase-head">{game.lastBall.out ? "Out" : "Runs"}</h2>
+              <p className="gc-phase-body">
+                Batter {game.lastBall.batterValue}, bowler {game.lastBall.bowlerValue}.
+              </p>
+              <span className="gc-verdict">
+                <span className="gc-verdict-num">
+                  {game.lastBall.out ? "0" : `+${game.lastBall.batterValue}`}
+                </span>
+                <span className="gc-verdict-word">
+                  {game.lastBall.out ? "Wicket down" : "On the board"}
+                </span>
+              </span>
+            </div>
+          )}
 
-        {game.phase === "ball-result" && game.lastBall && (
-          <PhaseBlock title={game.lastBall.out ? "OUT!" : "Runs!"}>
-            <p className="text-sm">
-              Batter threw {game.lastBall.batterValue}, bowler threw {game.lastBall.bowlerValue}.
-            </p>
-            {!game.lastBall.out && (
-              <div className="nb-chip nb-chip--green nb-chip--lg mt-2">
-                +{game.lastBall.batterValue} runs
-              </div>
-            )}
-            {game.lastBall.out && <div className="nb-chip nb-chip--pink nb-chip--lg mt-2">Wicket down</div>}
-          </PhaseBlock>
-        )}
-
-        {game.phase === "innings-break" && (
-          <PhaseBlock title="Innings break">
-            <p className="text-sm">
-              {isSelfBatting ? "You are" : `${PEER_LABEL} is`} out. Second innings starting…
-            </p>
-          </PhaseBlock>
-        )}
-      </div>
-    </main>
+          {game.phase === "innings-break" && (
+            <div className="gc-phase gc-phase--yellow">
+              <h2 className="gc-phase-head">Innings break</h2>
+              <p className="gc-phase-body">
+                {isSelfBatting ? "You are" : `${PEER_LABEL} is`} out. Second innings
+                starting.
+              </p>
+            </div>
+          )}
+        </div>
+      </main>
+    </>
   );
 }
 
-function Centered({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="flex flex-1 items-center justify-center px-4 py-10">{children}</main>
-  );
-}
-
-// A single, consistently-placed way back to the previous screen - top
-// right, everywhere it's needed, so there's never a dead end that only a
-// reload or a closed tab can escape from. Sits above everything else
-// (z-20) since it needs to stay clickable over video tiles and cards.
+/** A single, consistently placed way back, top right on every screen that
+ *  needs one, so there is never a dead end only a reload can escape. */
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      aria-label="Back"
-      className="brutal-border brutal-shadow-sm brutal-press fixed right-4 top-4 z-20 cursor-pointer rounded-lg bg-white px-3 py-1.5 font-display text-xs font-bold uppercase"
-    >
-      ← Back
+    <button onClick={onClick} aria-label="Back" className="gc-btn gc-btn--sm gc-back">
+      <IconArrowLeft size={14} stroke={ICON_STROKE} />
+      Back
     </button>
   );
 }
 
-function PhaseBlock({ title, children }: { title: string; children: React.ReactNode }) {
+function FinalScore({ label, runs }: { label: string; runs: number }) {
   return (
-    <div>
-      <h3 className="nb-phase-heading">{title}</h3>
-      {children}
+    <div className="gc-panel bg-white text-left">
+      <p className="gc-label">{label}</p>
+      <p className="gc-num mt-1 text-4xl leading-none">{runs}</p>
     </div>
   );
 }
 
-function WaitingLine({ label, action }: { label: string; action: string }) {
-  return <p className="text-sm text-black/60">Waiting for {label.toLowerCase()} {action}…</p>;
-}
-
-function statusLabel(status: string) {
+function statusTitle(status: string) {
   switch (status) {
     case "requesting-camera":
-      return "Asking for camera access…";
+      return "camera.exe";
     case "connecting":
-      return "Connecting…";
-    case "waiting-for-opponent":
-      return "Waiting for someone else to open the site…";
+      return "connecting";
     default:
-      return "Loading…";
+      return "lobby";
   }
+}
+
+function statusHeading(status: string) {
+  switch (status) {
+    case "requesting-camera":
+      return "Let us see you";
+    case "connecting":
+      return "Finding a ground";
+    case "waiting-for-opponent":
+      return "Nobody here yet";
+    default:
+      return "Loading";
+  }
+}
+
+function statusBody(status: string, mode: GameMode | null) {
+  if (status === "requesting-camera") {
+    return "Allow the camera so your hand can be read.";
+  }
+  if (status === "connecting") {
+    return "Hooking you up to the other end.";
+  }
+  if (status === "waiting-for-opponent") {
+    return mode === "stranger"
+      ? "Waiting for someone else to open the site. Send it to a friend and you will be matched."
+      : "Connecting you into the match.";
+  }
+  return "One moment.";
 }
 
 function HandStatusBadge({ count }: { count: number | null }) {
   return (
-    <span className={`nb-hand-badge ${count !== null ? "nb-hand-badge--ok" : "nb-hand-badge--none"}`}>
-      {count !== null ? `✋ Sees ${count}` : "No hand seen"}
+    <span className={`gc-hand ${count !== null ? "gc-hand--ok" : "gc-hand--none"}`}>
+      <IconHandStop size={12} stroke={ICON_STROKE} />
+      {count !== null ? `Sees ${count}` : "No hand"}
     </span>
   );
 }
 
-// One row in the Private Match friends list: a live online/offline dot,
-// their saved nickname and code, and whichever action makes sense right
-// now - invite, cancel a pending invite, or remove them.
+/** One row in the friends list: a live online dot, their name, and
+ *  whichever action makes sense right now. */
 function FriendRow({
   friend,
   status,
@@ -984,39 +1103,34 @@ function FriendRow({
   onRemove: () => void;
 }) {
   return (
-    <div className="nb-friend-row">
-      <div className="nb-friend-left">
-        <StatusDot status={status} />
-        <div>
-          <p className="nb-friend-name">{friend.nickname}</p>
-          <p className="nb-friend-user">{friend.username}</p>
+    <div className="gc-row">
+      <div className="gc-row-main">
+        <span className={`gc-dot gc-dot--${status}`} />
+        <div className="min-w-0">
+          <p className="gc-row-name">{friend.nickname}</p>
+          <p className="gc-row-sub">{friend.username}</p>
           {outgoingStatus === "failed" && (
-            <p className="nb-error-text" style={{ marginTop: "2px" }}>
-              Couldn&apos;t reach them - try again
-            </p>
+            <p className="gc-error">Could not reach them</p>
           )}
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-none items-center gap-2">
         {outgoingStatus === "waiting" ? (
-          <button className="nb-copy-btn" onClick={onCancelInvite}>
+          <button className="gc-btn gc-btn--sm" onClick={onCancelInvite}>
             Cancel
           </button>
         ) : (
           <button
-            className="nb-btn nb-green"
-            style={{ padding: "6px 12px", fontSize: "12px" }}
+            className="gc-btn gc-btn--sm gc-btn--red"
             disabled={status !== "online"}
             onClick={onInvite}
           >
-            {outgoingStatus === "declined"
-              ? "Declined - retry"
-              : outgoingStatus === "failed"
-                ? "Retry"
-                : "Invite"}
+            {outgoingStatus === "declined" || outgoingStatus === "failed"
+              ? "Retry"
+              : "Invite"}
           </button>
         )}
-        <button className="nb-friend-remove" onClick={onRemove}>
+        <button className="gc-link-btn" onClick={onRemove}>
           Remove
         </button>
       </div>
@@ -1024,21 +1138,17 @@ function FriendRow({
   );
 }
 
-function StatusDot({ status }: { status: FriendStatus }) {
-  const modifier =
-    status === "online" ? "nb-dot--online" : status === "offline" ? "nb-dot--offline" : "nb-dot--checking";
-  return <span className={`nb-dot ${modifier}`} />;
-}
-
-// The vs-computer opponent tile - it never had a camera, so instead of a
-// video feed it just shows a face and, once it's actually thrown, the
-// number.
+/** The vs-computer opponent tile. It never had a camera, so it shows a
+ *  face and, once it has thrown, the number. */
 function ComputerFace({ lastValue }: { lastValue: number | null }) {
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-black text-white">
-      <span className="text-4xl">🤖</span>
+    <div
+      className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+      style={{ background: "var(--gc-blue)", color: "var(--gc-paper)" }}
+    >
+      <IconRobot size={46} stroke={ICON_STROKE} />
       {lastValue !== null && (
-        <span className="font-display text-lg font-bold">Threw {lastValue}</span>
+        <span className="gc-num text-3xl leading-none">{lastValue}</span>
       )}
     </div>
   );

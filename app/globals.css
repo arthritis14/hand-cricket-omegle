@@ -1,737 +1,1010 @@
-@import url("https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400;700&display=swap");
 @import "tailwindcss";
 
-:root {
-  /* Matches the cream base of the illustrated corner artwork in the body
-     background below, so the sprites' keyed-out edges blend straight
-     into the page instead of showing a seam. */
-  --background: #f5f2e9;
-  --foreground: #111111;
+/* ============================================================
+   THE GULLY - design system for Hand Cricket Omegle
+   ============================================================
 
-  /* Neo-brutalist palette - a wider spread of loud, flat colors rather
-     than one or two accents, so every screen gets its own identity. */
-  --brutal-purple: #7c6ff0;
-  --brutal-lime: #cdfa3f;
-  --brutal-coral: #ff6a4d;
-  --brutal-yellow: #ffd93f;
-  --brutal-pink: #ff7ab6;
-  --brutal-blue: #3d6bff;
-  --brutal-orange: #ff8c1a;
-  --brutal-mint: #17e3a6;
-  --brutal-red: #ff3b3b;
-  --brutal-black: #111111;
-  --brutal-white: #ffffff;
-  --brutal-cream: #f5f2e9;
-  /* Tinted "content panel" backgrounds that stand in for plain white
-     cards - still light enough for black text, but always carrying a
-     visible hue instead of washing out to white. */
-  --brutal-lilac: #ddceff;
-  --brutal-peach: #ffdcb8;
+   Neubrutalist, street-cricket, retro-arcade. The rules, once, so
+   every screen stays in the same world:
+
+   COLOUR   Six flats plus ink. Sampled from the illustrations so the
+            art and the interface read as one thing rather than an
+            image pasted onto a UI. No gradients anywhere.
+   SHAPE    Structural surfaces and buttons are square (radius 0).
+            Status labels are pills. That is the whole rule.
+   BORDER   One ink outline weight per scale. 3px small, 4px large.
+   SHADOW   Hard offset, never blurred, never tinted. Pressing moves
+            the element into its own shadow.
+   TYPE     Archivo Black for display, Space Grotesk for interface,
+            Space Mono for anything numeric. Numbers are tabular so
+            a changing score never reflows.
+   MOTION   Everything is transform or opacity. Durations and easings
+            come from the tokens below, not from ad-hoc values.
+   ============================================================ */
+
+:root {
+  /* Sampled from the cricket illustrations. */
+  --gc-lime: #c8f03c;
+  --gc-red: #e8442c;
+  --gc-blue: #1b6ef3;
+  --gc-yellow: #ffc61a;
+  --gc-cream: #f2e9d5;
+  --gc-paper: #fffaf0;
+  --gc-ink: #0a0a0a;
+
+  --background: var(--gc-cream);
+  --foreground: var(--gc-ink);
+
+  /* Structure */
+  --gc-b: 3px;
+  --gc-b-lg: 4px;
+  --gc-shadow: 5px 5px 0 0 var(--gc-ink);
+  --gc-shadow-lg: 8px 8px 0 0 var(--gc-ink);
+  --gc-shadow-press: 2px 2px 0 0 var(--gc-ink);
+
+  /* Motion. Custom curves: the built-in CSS easings are too weak to
+     read as intentional at these durations. */
+  --gc-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --gc-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --gc-press: 120ms;
+  --gc-quick: 180ms;
+  --gc-enter: 260ms;
+
+  /* The fallbacks matter more than usual here: the identity is carried
+     by weight, so if the webfont is slow or blocked the page must still
+     land heavy rather than dropping to a default sans. Arial Black and
+     Impact are the two chunky faces present on effectively every
+     desktop and Android device. */
+  --font-display: "Archivo Black", "Arial Black", "Helvetica Neue", Impact,
+    ui-sans-serif, system-ui, sans-serif;
+  --font-ui: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-num: "Space Mono", ui-monospace, "Courier New", monospace;
+
+  color-scheme: light;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* System font stacks - no external font fetch, so the build never
-     depends on reaching Google Fonts (and it won't hitch on a slow or
-     locked-down network at runtime either). The brutalist look comes
-     from weight/uppercase/tracking, not a specific typeface. */
-  --font-display: ui-sans-serif, "Segoe UI", system-ui, -apple-system, sans-serif;
-  --font-sans: ui-sans-serif, "Segoe UI", system-ui, -apple-system, sans-serif;
+  --color-gc-lime: var(--gc-lime);
+  --color-gc-red: var(--gc-red);
+  --color-gc-blue: var(--gc-blue);
+  --color-gc-yellow: var(--gc-yellow);
+  --color-gc-cream: var(--gc-cream);
+  --color-gc-ink: var(--gc-ink);
+}
 
-  --color-brutal-purple: var(--brutal-purple);
-  --color-brutal-lime: var(--brutal-lime);
-  --color-brutal-coral: var(--brutal-coral);
-  --color-brutal-yellow: var(--brutal-yellow);
-  --color-brutal-pink: var(--brutal-pink);
-  --color-brutal-blue: var(--brutal-blue);
-  --color-brutal-orange: var(--brutal-orange);
-  --color-brutal-mint: var(--brutal-mint);
-  --color-brutal-red: var(--brutal-red);
-  --color-brutal-black: var(--brutal-black);
-  --color-brutal-white: var(--brutal-white);
-  --color-brutal-cream: var(--brutal-cream);
-  --color-brutal-lilac: var(--brutal-lilac);
-  --color-brutal-peach: var(--brutal-peach);
+/* ---- Mobile-native baseline ------------------------------------
+   These are the platform-layer tells that make a web app feel like a
+   website on a phone. Each one is here for a named reason. */
+html {
+  /* Kills the grey flash iOS/Android paint over any tapped element.
+     Every control below supplies its own :active instead. */
+  -webkit-tap-highlight-color: transparent;
+  /* No font inflation when the phone rotates to landscape. */
+  -webkit-text-size-adjust: 100%;
+  /* This is an app, not a document: no pull-to-refresh, no page-level
+     rubber band behind the game. */
+  overscroll-behavior: none;
 }
 
 body {
-  /* Every screen has now migrated to the neobrutalist v2 system (see
-     below), so the old illustrated corner artwork this used to carry is
-     retired - the landing menu paints its own full-bleed yellow ground
-     (.nb-hero-bg) over this, and every other screen now wants this same
-     calm neutral canvas rather than busy illustration. */
-  background: var(--nb-bg, var(--background));
+  background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-ui);
+  min-height: 100dvh;
 }
 
-/* ---- Neo-brutalist utility primitives ---- */
-
-.brutal-border {
-  border: 3px solid var(--brutal-black);
+/* Controls are controls: long-pressing one should not select its label
+   or pop the iOS callout, and taps should not wait for the browser to
+   rule out a double-tap zoom. */
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
-.brutal-border-thick {
-  border: 4px solid var(--brutal-black);
+/* 16px is the threshold under which iOS Safari zooms the page on focus
+   and never zooms back out. */
+input,
+textarea,
+select {
+  font-size: 16px;
 }
 
-.brutal-shadow {
-  box-shadow: 6px 6px 0 0 var(--brutal-black);
-}
-
-.brutal-shadow-sm {
-  box-shadow: 3px 3px 0 0 var(--brutal-black);
-}
-
-.brutal-shadow-lg {
-  box-shadow: 12px 12px 0 0 var(--brutal-black);
-}
-
-.brutal-press {
-  transition: transform 120ms ease, box-shadow 120ms ease;
-}
-
-.brutal-press:active {
-  transform: translate(4px, 4px);
-  box-shadow: 2px 2px 0 0 var(--brutal-black);
-}
-
-/* Applied to the three home-screen mode buttons: on hover they lift off
-   the page and "pop" slightly larger, with the shadow stretching to
-   match, then the existing .brutal-press active-state still handles the
-   press-down feedback on click. */
-.brutal-lift {
-  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 180ms ease;
-}
-
-.brutal-lift:hover {
-  transform: translate(-2px, -8px) scale(1.03);
-  box-shadow: 9px 14px 0 0 var(--brutal-black);
-}
-
-.brutal-lift:focus-visible {
-  transform: translate(-2px, -8px) scale(1.03);
-  box-shadow: 9px 14px 0 0 var(--brutal-black);
-}
-
-/* Higher specificity than either rule alone, so an actual click still
-   presses down instead of staying lifted while the mouse is held. */
-.brutal-lift.brutal-press:active {
-  transform: translate(4px, 4px);
-  box-shadow: 2px 2px 0 0 var(--brutal-black);
-}
-
-.brutal-heading {
-  font-family: var(--font-display), var(--font-sans), sans-serif;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-}
-
-.brutal-dots {
-  background-image: radial-gradient(var(--brutal-black) 1.5px, transparent 1.5px);
-  background-size: 16px 16px;
-  opacity: 0.12;
-}
-
-/* Small "sticker" tilts for badges/cards, so the layout doesn't feel like
-   everything sits on a rigid grid. Used sparingly - one or two elements
-   per screen, not everything at once. */
-.brutal-tilt-l {
-  transform: rotate(-2deg);
-}
-
-.brutal-tilt-r {
-  transform: rotate(2deg);
-}
-
-/* Mirror the local camera feed so it behaves like a mirror, without
-   affecting the raw frames MediaPipe reads for detection. */
-.mirror {
-  transform: scaleX(-1);
-}
-
-/* ================= Neobrutalist v2 - landing menu only =================
-   A second, deliberately separate design system (flat colour blocks, zero
-   border-radius, hard offset shadows, Syne/Space Grotesk/Inter/Space Mono)
-   scoped entirely to the nb- prefixed classes below. Only the landing
-   "menu" screen in app/page.tsx uses these for now - every other screen
-   still runs on the brutal-* system above until it gets its own design
-   pass, so the two systems intentionally coexist during the migration. */
-
-:root {
-  --nb-bg: #fffdf5;
-  --nb-yellow: #ffd23f;
-  --nb-pink: #ff6b6b;
-  --nb-blue: #74b9ff;
-  --nb-green: #88d498;
-  --nb-orange: #ffa552;
-  --nb-lavender: #b8a9fa;
-  --nb-ink: #000000;
-}
-
-.nb-hero-bg {
+/* ---- Ground ----------------------------------------------------
+   The outfield. An exposed grid rather than a flat fill, so the page
+   reads as a marked-out pitch instead of a colour swatch. */
+.gc-ground {
   position: fixed;
   inset: 0;
-  background: var(--nb-yellow);
   z-index: -1;
+  background-color: var(--gc-lime);
+  background-image:
+    linear-gradient(rgba(10, 10, 10, 0.09) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(10, 10, 10, 0.09) 2px, transparent 2px);
+  background-size: 48px 48px;
 }
 
-.nb-hero-wrap {
+.gc-ground--cream {
+  background-color: var(--gc-cream);
+}
+
+.gc-ground--blue {
+  background-color: var(--gc-blue);
+}
+
+/* The 22 yards. A cream strip with a crease ruled across it, sitting
+   behind the match screen so play happens on an actual pitch. */
+.gc-pitch {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--gc-lime);
+  background-image:
+    linear-gradient(rgba(10, 10, 10, 0.09) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(10, 10, 10, 0.09) 2px, transparent 2px);
+  background-size: 48px 48px;
+  overflow: hidden;
+}
+
+.gc-pitch::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: min(560px, 82vw);
+  transform: translateX(-50%);
+  background: var(--gc-cream);
+  border-left: var(--gc-b) solid var(--gc-ink);
+  border-right: var(--gc-b) solid var(--gc-ink);
+}
+
+/* ---- Surfaces --------------------------------------------------- */
+.gc-card {
   position: relative;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+  background: var(--gc-paper);
+  border: var(--gc-b-lg) solid var(--gc-ink);
+  box-shadow: var(--gc-shadow-lg);
+  padding: 22px;
 }
 
-.nb-badge {
-  position: relative;
-  z-index: 4;
-  width: fit-content;
-  margin-left: 24px;
-  margin-bottom: -16px;
-  padding: 7px 18px;
-  font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  background: var(--nb-lavender);
-  border: 3px solid var(--nb-ink);
-  box-shadow: 3px 3px 0 0 var(--nb-ink);
-  transform: rotate(-4deg);
+.gc-card--lime { background: var(--gc-lime); }
+.gc-card--red { background: var(--gc-red); }
+.gc-card--blue { background: var(--gc-blue); }
+.gc-card--yellow { background: var(--gc-yellow); }
+.gc-card--cream { background: var(--gc-cream); }
+
+/* Text on the two dark-enough fills flips to paper so contrast holds.
+   Everything else keeps ink on a bright flat, which is comfortably
+   past WCAG AA at every size used here. */
+.gc-card--red,
+.gc-card--blue {
+  color: var(--gc-paper);
 }
 
-.nb-card {
-  position: relative;
-  z-index: 3;
-  background: #fff;
-  border: 4px solid var(--nb-ink);
-  box-shadow: 10px 10px 0 0 var(--nb-ink);
-  padding: 52px 44px;
-  text-align: center;
+/* A retro browser window. The frame around anything that should feel
+   like it is running on an old machine: video tiles, the hub, panels. */
+.gc-win {
+  border: var(--gc-b-lg) solid var(--gc-ink);
+  box-shadow: var(--gc-shadow);
+  background: var(--gc-paper);
 }
 
-.nb-title {
-  margin: 0;
-  font-family: "Syne", ui-sans-serif, sans-serif;
-  font-weight: 800;
-  font-size: 52px;
-  line-height: 1;
-  letter-spacing: -0.01em;
-  color: var(--nb-ink);
-}
-
-.nb-accent {
-  color: var(--nb-pink);
-}
-
-.nb-rule {
-  height: 7px;
-  width: 84px;
-  margin: 24px auto 0;
-  background: var(--nb-green);
-  border: 2px solid var(--nb-ink);
-}
-
-.nb-menu {
-  margin-top: 34px;
+.gc-win-bar {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--gc-yellow);
+  border-bottom: var(--gc-b) solid var(--gc-ink);
 }
 
-.nb-btn {
-  cursor: pointer;
-  width: 100%;
-  padding: 18px 28px;
-  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+.gc-win-dots {
+  display: flex;
+  gap: 5px;
+  flex: none;
+}
+
+.gc-win-dots i {
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--gc-ink);
+  border-radius: 999px;
+  background: var(--gc-paper);
+}
+
+.gc-win-title {
+  font-family: var(--font-num);
   font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.005em;
+  font-size: 11px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #000;
-  background: none;
-  border: 3px solid var(--nb-ink);
-  border-radius: 0;
-  box-shadow: 5px 5px 0 0 var(--nb-ink);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.nb-btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 7px 7px 0 0 var(--nb-ink);
+
+/* ---- Type ------------------------------------------------------- */
+.gc-display {
+  font-family: var(--font-display);
+  font-size: clamp(38px, 11vw, 78px);
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  margin: 0;
 }
-.nb-btn:active {
-  transform: translate(5px, 5px);
-  box-shadow: none;
+
+.gc-display--sm {
+  font-size: clamp(28px, 7vw, 42px);
 }
-.nb-btn:focus-visible {
-  outline: 3px solid var(--nb-blue);
+
+/* The one place a second colour enters the wordmark, so "CRICKET"
+   carries the ball's red and the identity is legible at a glance. */
+.gc-accent {
+  color: var(--gc-red);
+}
+
+.gc-lede {
+  font-size: 15px;
+  line-height: 1.45;
+  max-width: 34ch;
+  margin: 0;
+}
+
+.gc-label {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.gc-num {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Badge (pill) ----------------------------------------------- */
+.gc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: var(--gc-b) solid var(--gc-ink);
+  border-radius: 999px;
+  background: var(--gc-paper);
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: var(--gc-shadow-press);
+}
+
+.gc-badge--red { background: var(--gc-red); color: var(--gc-paper); }
+.gc-badge--lime { background: var(--gc-lime); }
+.gc-badge--yellow { background: var(--gc-yellow); }
+.gc-badge--blue { background: var(--gc-blue); color: var(--gc-paper); }
+
+/* ---- Buttons ----------------------------------------------------
+   The press is the whole point: the element travels into its own
+   shadow, which is the neubrutalist equivalent of a key going down.
+   120ms, ease-out, so the feedback lands on finger-down rather than
+   finger-up. */
+.gc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px 22px;
+  border: var(--gc-b-lg) solid var(--gc-ink);
+  background: var(--gc-paper);
+  box-shadow: var(--gc-shadow);
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--gc-ink);
+  cursor: pointer;
+  /* Named properties only: transition-all would animate the border and
+     background on every state change and cost frames for nothing. */
+  transition:
+    transform var(--gc-press) var(--gc-ease-out),
+    box-shadow var(--gc-press) var(--gc-ease-out);
+  /* Primary CTAs stay on one line. A wrapped button label is broken. */
+  white-space: nowrap;
+}
+
+.gc-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: var(--gc-shadow-press);
+}
+
+/* Hover is gated: on touch the browser fakes a hover that sticks after
+   the tap and leaves the button visibly stuck. */
+@media (hover: hover) and (pointer: fine) {
+  .gc-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 7px 7px 0 0 var(--gc-ink);
+  }
+}
+
+.gc-btn:focus-visible {
+  outline: var(--gc-b) solid var(--gc-blue);
   outline-offset: 3px;
 }
-.nb-btn.nb-pink { background: var(--nb-pink); }
-.nb-btn.nb-green { background: var(--nb-green); }
-.nb-btn.nb-blue { background: var(--nb-blue); }
 
-.nb-motif-bat {
-  position: absolute;
-  z-index: 4;
-  bottom: -54px;
-  right: -40px;
-  width: 148px;
-  height: auto;
-  transform: rotate(9deg);
-}
-
-.nb-credit {
-  margin-top: 26px;
-  text-align: center;
-  font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.55);
-}
-
-@media (max-width: 560px) {
-  .nb-card {
-    padding: 36px 24px;
-  }
-  .nb-title {
-    font-size: 34px;
-  }
-  .nb-motif-bat {
-    width: 104px;
-    bottom: -34px;
-    right: -22px;
-  }
-}
-
-/* ---- nb-btn colour + disabled variants beyond the three the hero uses ---- */
-.nb-btn.nb-orange { background: var(--nb-orange); }
-.nb-btn.nb-black { background: var(--nb-ink); color: #fff; }
-.nb-btn.nb-yellow { background: var(--nb-yellow); }
-.nb-btn:disabled {
+/* Disabled goes neutral rather than faded. Dropping opacity on a
+   coloured fill muddies the fill AND the label at the same time, which
+   is how a disabled button ends up failing contrast while still looking
+   like a button. A flat grey with ink text stays legible. */
+.gc-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
   transform: none;
-  box-shadow: 5px 5px 0 0 var(--nb-ink);
+  background: #d8d2c4;
+  color: rgba(10, 10, 10, 0.5);
+  box-shadow: var(--gc-shadow);
 }
 
-/* ---- Private Match hub ---- */
-.nb-hub-wrap {
+.gc-btn--red { background: var(--gc-red); color: var(--gc-paper); }
+.gc-btn--lime { background: var(--gc-lime); }
+.gc-btn--blue { background: var(--gc-blue); color: var(--gc-paper); }
+.gc-btn--yellow { background: var(--gc-yellow); }
+.gc-btn--ink { background: var(--gc-ink); color: var(--gc-paper); }
+
+.gc-btn--lg {
   width: 100%;
-  max-width: 420px;
-  margin: 0 auto;
+  padding: 19px 22px;
+  font-size: clamp(17px, 4.6vw, 21px);
+  justify-content: flex-start;
 }
 
-.nb-panel {
-  border: 3px solid var(--nb-ink);
-  background: var(--nb-lavender);
-  padding: 14px 16px;
-}
-
-.nb-panel-k {
-  margin: 0;
-  font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(0, 0, 0, 0.55);
-}
-
-.nb-panel-sub {
-  margin: 4px 0 0;
+.gc-btn--sm {
+  padding: 9px 14px;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.6);
+  border-width: var(--gc-b);
+  box-shadow: var(--gc-shadow-press);
 }
 
-.nb-input {
-  width: 100%;
-  font-family: "Inter", ui-sans-serif, sans-serif;
-  font-size: 14px;
-  padding: 9px 12px;
-  background: #fff;
-  border: 3px solid var(--nb-ink);
-  border-radius: 0;
-}
-.nb-input:focus-visible {
-  outline: 3px solid var(--nb-blue);
-  outline-offset: 2px;
+.gc-btn--sm:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 var(--gc-ink);
 }
 
-.nb-error-text {
-  margin: 8px 0 0;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--nb-pink);
-}
-
-.nb-username-row {
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.nb-username {
-  margin: 0;
-  font-family: "Syne", ui-sans-serif, sans-serif;
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-}
-.nb-copy-btn {
-  cursor: pointer;
-  font-family: "Space Mono", ui-monospace, monospace;
+/* A quieter control for secondary actions, so a row of three buttons
+   does not read as three equal decisions. */
+.gc-link-btn {
+  font-family: var(--font-num);
   font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  background: #fff;
-  border: 3px solid var(--nb-ink);
-  box-shadow: 3px 3px 0 0 var(--nb-ink);
-  padding: 6px 12px;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-}
-.nb-copy-btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 0 var(--nb-ink); }
-.nb-copy-btn:active { transform: translate(3px, 3px); box-shadow: none; }
-
-.nb-invite-banner {
-  margin-top: 14px;
-  border: 3px solid var(--nb-ink);
-  box-shadow: 3px 3px 0 0 var(--nb-ink);
-  background: var(--nb-yellow);
-  padding: 12px 14px;
-}
-.nb-invite-banner p {
-  margin: 0 0 8px;
-  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-}
-.nb-invite-row {
-  display: flex;
-  gap: 8px;
-}
-.nb-invite-row .nb-btn {
-  flex: 1;
-  padding: 9px 12px;
-  font-size: 13px;
-}
-
-.nb-section-label {
-  margin: 0;
-  font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(0, 0, 0, 0.55);
-}
-
-.nb-field-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.nb-empty-text {
-  margin: 8px 0 0;
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.5);
-}
-
-.nb-friend-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border: 3px solid var(--nb-ink);
-  background: #fff;
-  padding: 8px 12px;
-}
-.nb-friend-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.nb-dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border: 2px solid var(--nb-ink);
-}
-.nb-dot--online { background: var(--nb-green); }
-.nb-dot--offline { background: #ccc; }
-.nb-dot--checking { background: var(--nb-yellow); }
-.nb-friend-name { margin: 0; font-weight: 700; font-size: 13px; }
-.nb-friend-user {
-  margin: 0;
-  font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.5);
-}
-.nb-friend-remove {
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.4);
   text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
   background: none;
   border: none;
+  color: var(--gc-ink);
+  padding: 6px 4px;
 }
 
-/* ---- status / result cards (error, opponent-left, waiting, game-over) ---- */
-.nb-card--pink { background: var(--nb-pink); }
-.nb-card--orange { background: var(--nb-orange); }
-.nb-card--blue { background: var(--nb-blue); }
-.nb-card--green { background: var(--nb-green); }
-.nb-card--yellow { background: var(--nb-yellow); }
-
-.nb-status-text {
-  margin: 0;
-  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  text-transform: uppercase;
-}
-.nb-status-sub {
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.7);
+/* ---- Inputs ----------------------------------------------------- */
+.gc-input {
+  width: 100%;
+  padding: 13px 14px;
+  border: var(--gc-b) solid var(--gc-ink);
+  background: var(--gc-paper);
+  font-family: var(--font-num);
+  font-size: 16px;
+  color: var(--gc-ink);
 }
 
-.nb-status-badge {
-  display: inline-block;
-  margin: 0 auto 14px;
-  font-family: "Space Mono", ui-monospace, monospace;
+.gc-input::placeholder {
+  /* Dark enough to clear AA against the paper fill. */
+  color: rgba(10, 10, 10, 0.55);
+}
+
+.gc-input:focus-visible {
+  outline: var(--gc-b) solid var(--gc-blue);
+  outline-offset: 2px;
+}
+
+.gc-error {
+  margin: 8px 0 0;
+  font-family: var(--font-num);
   font-size: 12px;
   font-weight: 700;
-  text-transform: uppercase;
-  padding: 6px 14px;
-  background: var(--nb-yellow);
-  border: 3px solid var(--nb-ink);
-  box-shadow: 3px 3px 0 0 var(--nb-ink);
-  transform: rotate(-2deg);
-}
-.nb-status-badge--sm {
-  padding: 5px 12px;
-  font-size: 11px;
-  transform: rotate(2deg);
+  color: #9c1b0d;
 }
 
-.nb-spinner {
-  margin: 22px auto 0;
-  width: 40px;
-  height: 40px;
-  border: 4px solid var(--nb-ink);
-  border-top-color: var(--nb-yellow);
-  border-radius: 999px;
-  animation: nb-spin 1s linear infinite;
-}
-@keyframes nb-spin {
-  to { transform: rotate(360deg); }
-}
-
-.nb-go-score {
-  display: flex;
-  justify-content: space-around;
-  margin: 18px 0;
-}
-.nb-go-who {
-  margin: 0;
-  font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 10px;
-  text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.6);
-}
-.nb-go-runs {
-  margin: 0;
-  font-family: "Syne", ui-sans-serif, sans-serif;
-  font-size: 30px;
-  font-weight: 800;
-}
-
-/* ---- active match screen ---- */
-.nb-match-title {
-  margin: 0;
-  font-family: "Syne", ui-sans-serif, sans-serif;
-  font-weight: 800;
-  font-size: 20px;
-  text-transform: uppercase;
-  letter-spacing: -0.01em;
-}
-
-.nb-scoreboard {
-  background: #fff;
-  border: 3px solid var(--nb-ink);
-  box-shadow: 3px 3px 0 0 var(--nb-ink);
-  padding: 12px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.nb-score-line {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-.nb-score-who {
-  font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.55);
-}
-.nb-score-runs {
-  font-family: "Syne", ui-sans-serif, sans-serif;
-  font-size: 24px;
-  font-weight: 800;
-}
-.nb-score-out {
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.4);
-}
-.nb-vs {
-  font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.35);
-}
-.nb-chip {
-  display: inline-block;
-  font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border: 2px solid var(--nb-ink);
-}
-.nb-chip--lg { padding: 4px 10px; font-size: 13px; }
-.nb-chip--green { background: var(--nb-green); }
-.nb-chip--pink { background: var(--nb-pink); }
-
-.nb-video-tile {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  width: 100%;
+/* ---- Scoreboard -------------------------------------------------
+   A manual tin scoreboard: dark board, hanging number plates. This is
+   the real score display, not a styled text row. */
+.gc-board {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  gap: 0;
+  border: var(--gc-b-lg) solid var(--gc-ink);
+  box-shadow: var(--gc-shadow);
+  background: var(--gc-ink);
   overflow: hidden;
-  background: #000;
-  border: 3px solid var(--nb-ink);
-  box-shadow: 3px 3px 0 0 var(--nb-ink);
 }
-.nb-video-tile video {
-  height: 100%;
-  width: 100%;
-  object-fit: cover;
-  transition: filter 0.3s ease-out, transform 0.3s ease-out;
-}
-.nb-video-tile video.nb-blurred {
-  filter: blur(24px);
-  transform: scale(1.1);
-}
-.nb-video-label {
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  background: var(--nb-yellow);
-  border: 2px solid var(--nb-ink);
-  padding: 3px 9px;
-}
-.nb-video-waiting {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.85);
-  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
-  font-size: 13px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
-}
-.nb-video-blur-overlay {
-  position: absolute;
-  inset: 0;
+
+.gc-board-side {
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.gc-board-who {
+  font-family: var(--font-num);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gc-lime);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.gc-board-runs {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(30px, 9vw, 44px);
+  line-height: 1;
+  color: var(--gc-paper);
+  margin: 0;
+}
+
+.gc-board-out {
+  color: var(--gc-red);
+  font-size: 0.5em;
+  margin-left: 4px;
+}
+
+.gc-board-mid {
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.35);
-  padding: 0 16px;
+  padding: 0 10px;
+  background: var(--gc-red);
+  border-left: var(--gc-b) solid var(--gc-ink);
+  border-right: var(--gc-b) solid var(--gc-ink);
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--gc-paper);
+}
+
+.gc-board-flag {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border: 2px solid var(--gc-ink);
+  border-radius: 999px;
+  background: var(--gc-lime);
+  font-family: var(--font-num);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gc-ink);
+}
+
+.gc-board-target {
+  grid-column: 1 / -1;
+  padding: 7px 12px;
+  background: var(--gc-yellow);
+  border-top: var(--gc-b) solid var(--gc-ink);
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   text-align: center;
 }
-.nb-video-blur-chip {
-  font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  background: var(--nb-yellow);
-  border: 2px solid var(--nb-ink);
-  padding: 4px 10px;
+
+/* ---- Video tiles ------------------------------------------------ */
+.gc-tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--gc-ink);
+  border: var(--gc-b) solid var(--gc-ink);
 }
 
-.nb-hand-badge {
+.gc-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gc-tile .mirror {
+  transform: scaleX(-1);
+}
+
+.gc-tile-tag {
   position: absolute;
-  bottom: 10px;
-  left: 10px;
-  z-index: 10;
-  font-family: "Space Mono", ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
+  left: 0;
+  bottom: 0;
   padding: 4px 10px;
-  border: 2px solid var(--nb-ink);
-  box-shadow: 2px 2px 0 0 var(--nb-ink);
+  background: var(--gc-yellow);
+  border-top: 2px solid var(--gc-ink);
+  border-right: 2px solid var(--gc-ink);
+  font-family: var(--font-num);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
-.nb-hand-badge--ok { background: var(--nb-green); }
-.nb-hand-badge--none { background: var(--nb-pink); color: #fff; }
 
-.nb-countdown-badge {
+.gc-tile-wait {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  text-align: center;
+  color: var(--gc-paper);
+  font-family: var(--font-num);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* The sightscreen. During a throw the opponent's tile is shuttered by
+   the screen that sits behind the bowler at a real ground, rather than
+   blurred. Same anti-peeking job, but it says what it is doing, and a
+   shutter cannot be squinted through the way a blur can. */
+.gc-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px;
+  text-align: center;
+  background: var(--gc-paper);
+  background-image: linear-gradient(
+    var(--gc-cream) 50%,
+    var(--gc-paper) 50%
+  );
+  background-size: 100% 18px;
+  border-bottom: var(--gc-b-lg) solid var(--gc-ink);
+  transform: translateY(-101%);
+  transition: transform var(--gc-quick) var(--gc-ease-in-out);
+}
+
+.gc-screen--down {
+  transform: translateY(0);
+}
+
+.gc-screen-text {
+  font-family: var(--font-display);
+  font-size: 13px;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+/* ---- Countdown ---------------------------------------------------
+   The ball coming at you. It is the loudest moment in the game, so it
+   owns the whole tile rather than sitting in a corner badge. */
+.gc-count {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  background: rgba(10, 10, 10, 0.32);
 }
-.nb-countdown-badge > span {
+
+.gc-count-ball {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 96px;
-  height: 96px;
+  width: clamp(76px, 26vw, 104px);
+  aspect-ratio: 1;
   border-radius: 999px;
-  border: 4px solid var(--nb-ink);
-  box-shadow: 6px 6px 0 0 var(--nb-ink);
-  background: var(--nb-yellow);
-  font-family: "Syne", ui-sans-serif, sans-serif;
-  font-size: 40px;
-  font-weight: 800;
+  background: var(--gc-red);
+  border: var(--gc-b-lg) solid var(--gc-ink);
+  box-shadow: var(--gc-shadow);
+  font-family: var(--font-display);
+  font-size: clamp(34px, 12vw, 48px);
+  color: var(--gc-paper);
+  /* Keyed off the label so each tick re-fires: the ball arrives rather
+     than the number quietly swapping. Enters at 0.86 not 0, because
+     nothing in the world appears out of nothing. */
+  animation: gc-incoming 380ms var(--gc-ease-out);
 }
 
-.nb-phase-card {
-  background: var(--nb-lavender);
-  border: 4px solid var(--nb-ink);
-  box-shadow: 5px 5px 0 0 var(--nb-ink);
-  padding: 20px 18px;
-  text-align: left;
+@keyframes gc-incoming {
+  from {
+    transform: scale(0.86);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
-.nb-phase-heading {
-  margin: 0 0 10px;
-  font-family: "Syne", ui-sans-serif, sans-serif;
-  font-weight: 800;
-  font-size: 20px;
+
+/* ---- Hand read --------------------------------------------------- */
+.gc-hand {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border: 2px solid var(--gc-ink);
+  border-radius: 999px;
+  font-family: var(--font-num);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.nb-phase-strong {
+
+.gc-hand--ok { background: var(--gc-lime); }
+.gc-hand--none { background: var(--gc-paper); }
+
+/* ---- Phase card --------------------------------------------------
+   The umpire's call. Whatever the game wants from the player right now
+   is always here, in the same place, at the same size. */
+.gc-phase {
+  border: var(--gc-b-lg) solid var(--gc-ink);
+  box-shadow: var(--gc-shadow);
+  background: var(--gc-paper);
+  padding: 18px;
+}
+
+.gc-phase--lime { background: var(--gc-lime); }
+.gc-phase--red { background: var(--gc-red); color: var(--gc-paper); }
+.gc-phase--yellow { background: var(--gc-yellow); }
+
+.gc-phase-head {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 6vw, 28px);
+  line-height: 1;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+
+.gc-phase-body {
+  font-size: 14px;
+  line-height: 1.45;
   margin: 0;
-  font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+}
+
+.gc-phase-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.gc-phase-row .gc-btn {
+  flex: 1;
+}
+
+/* The outcome of a ball, sized to be read from across a room. */
+.gc-verdict {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 16px;
+  border: var(--gc-b) solid var(--gc-ink);
+  background: var(--gc-paper);
+  box-shadow: var(--gc-shadow-press);
+  color: var(--gc-ink);
+}
+
+.gc-verdict-num {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 8vw, 34px);
+  line-height: 1;
+}
+
+.gc-verdict-word {
+  font-family: var(--font-num);
+  font-size: 11px;
   font-weight: 700;
-  font-size: 16px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ---- Friends / hub ---------------------------------------------- */
+.gc-panel {
+  border: var(--gc-b) solid var(--gc-ink);
+  background: var(--gc-cream);
+  padding: 14px;
+}
+
+.gc-panel--lime { background: var(--gc-lime); }
+.gc-panel--yellow { background: var(--gc-yellow); }
+
+.gc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: var(--gc-b) solid var(--gc-ink);
+  background: var(--gc-paper);
+  padding: 10px 12px;
+}
+
+.gc-row-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.gc-row-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  text-transform: uppercase;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gc-row-sub {
+  font-family: var(--font-num);
+  font-size: 11px;
+  color: rgba(10, 10, 10, 0.62);
+  margin: 0;
+}
+
+.gc-dot {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--gc-ink);
+  border-radius: 999px;
+  flex: none;
+}
+
+.gc-dot--online { background: var(--gc-lime); }
+.gc-dot--offline { background: var(--gc-cream); }
+.gc-dot--checking { background: var(--gc-yellow); }
+
+.gc-username {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 6vw, 30px);
+  text-transform: uppercase;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Stumps waiting indicator -----------------------------------
+   Three stumps rattling. Replaces a spinner: it says "nobody is at the
+   other end yet" rather than "something is loading". Built from divs
+   because it is a CSS shape, not an illustration. */
+.gc-stumps {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 7px;
+  height: 56px;
+  margin: 18px auto 0;
+}
+
+.gc-stumps i {
+  display: block;
+  width: 13px;
+  height: 52px;
+  background: var(--gc-yellow);
+  border: var(--gc-b) solid var(--gc-ink);
+  transform-origin: bottom center;
+  animation: gc-rattle 1.6s var(--gc-ease-in-out) infinite;
+}
+
+.gc-stumps i:nth-child(2) { animation-delay: 0.16s; }
+.gc-stumps i:nth-child(3) { animation-delay: 0.32s; }
+
+@keyframes gc-rattle {
+  0%, 62%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-6deg); }
+  78% { transform: rotate(5deg); }
+  86% { transform: rotate(-2deg); }
+}
+
+/* ---- Ticker ------------------------------------------------------
+   The ground's LED board. Exactly one per page: a second marquee reads
+   as filler rather than atmosphere. */
+.gc-ticker {
+  border-top: var(--gc-b-lg) solid var(--gc-ink);
+  border-bottom: var(--gc-b-lg) solid var(--gc-ink);
+  background: var(--gc-ink);
+  overflow: hidden;
+  padding: 9px 0;
+}
+
+.gc-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: gc-scroll 26s linear infinite;
+}
+
+.gc-ticker span {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--gc-lime);
+  padding: 0 22px;
+  white-space: nowrap;
+}
+
+@keyframes gc-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ---- Screen entry ------------------------------------------------
+   Content arrives rather than blinking into place. Short and once,
+   never a loop: this fires on every screen change, which at this app's
+   pace is often. */
+.gc-enter {
+  animation: gc-rise var(--gc-enter) var(--gc-ease-out) both;
+}
+
+@keyframes gc-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.gc-stagger > * {
+  animation: gc-rise var(--gc-enter) var(--gc-ease-out) both;
+}
+
+.gc-stagger > *:nth-child(1) { animation-delay: 40ms; }
+.gc-stagger > *:nth-child(2) { animation-delay: 90ms; }
+.gc-stagger > *:nth-child(3) { animation-delay: 140ms; }
+.gc-stagger > *:nth-child(4) { animation-delay: 190ms; }
+
+/* ---- Back control ------------------------------------------------ */
+.gc-back {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  right: calc(12px + env(safe-area-inset-right, 0px));
+  z-index: 20;
+}
+
+/* ---- Layout helpers --------------------------------------------- */
+/* A screen that owns exactly one viewport, with its footer furniture
+   (the ticker) counted as part of that viewport rather than pushed under
+   the fold. Everything meant to be read is visible at rest. */
+.gc-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.gc-screen-wrap {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding:
+    calc(16px + env(safe-area-inset-top, 0px))
+    calc(16px + env(safe-area-inset-right, 0px))
+    calc(16px + env(safe-area-inset-bottom, 0px))
+    calc(16px + env(safe-area-inset-left, 0px));
+}
+
+/* Inside .gc-page the wrap must not also demand a full viewport, or the
+   two stack to 200dvh and the ticker falls off the bottom. */
+.gc-page > .gc-screen-wrap {
+  min-height: 0;
+  flex: 1;
+}
+
+.gc-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gc-hero {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  gap: 26px;
+  align-items: center;
+}
+
+/* Asymmetric on desktop: the type column carries more weight than the
+   art, and the art overlaps rather than sitting in a neat half. */
+@media (min-width: 900px) {
+  .gc-hero {
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 40px;
+  }
+}
+
+/* On a phone the art leads: a square would eat the whole screen and push
+   the buttons under the fold, so it crops to a shallow band and sits
+   above the type. On desktop it goes back to a square beside the type. */
+.gc-hero-art {
+  width: 100%;
+  justify-self: center;
+  border: var(--gc-b-lg) solid var(--gc-ink);
+  box-shadow: var(--gc-shadow-lg);
+  display: block;
+  background: var(--gc-cream);
+  /* Reserved by the ratio so the art landing never shifts the page. */
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: center;
+  order: -1;
+}
+
+@media (min-width: 900px) {
+  .gc-hero-art {
+    aspect-ratio: 1 / 1;
+    max-width: 420px;
+    order: 0;
+  }
+}
+
+.gc-credit {
+  font-family: var(--font-num);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.68;
+  margin: 0;
+}
+
+/* ---- Reduced motion ---------------------------------------------
+   Fewer and gentler, not zero: the opacity fades stay because they aid
+   comprehension. Everything that travels or loops stops. */
+@media (prefers-reduced-motion: reduce) {
+  .gc-ticker-track,
+  .gc-stumps i {
+    animation: none;
+  }
+
+  .gc-count-ball,
+  .gc-enter,
+  .gc-stagger > * {
+    animation: gc-fade 160ms var(--gc-ease-out) both;
+  }
+
+  .gc-btn,
+  .gc-screen {
+    transition-duration: 1ms;
+  }
+
+  .gc-btn:active {
+    transform: none;
+  }
+
+  @keyframes gc-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 }

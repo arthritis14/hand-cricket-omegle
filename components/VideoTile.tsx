@@ -9,16 +9,17 @@ interface VideoTileProps {
   muted?: boolean;
   tone: "self" | "peer";
   videoRef?: RefObject<HTMLVideoElement | null>;
-  // Heavily blurs the feed and covers it with a reason badge - used on
-  // the opponent's tile during the throw window so no one can just read
-  // the other person's hand off the live video and copy it. See the
-  // `strangerBlurred` comment in page.tsx for why this is safe to lift
-  // exactly when it is.
-  blurred?: boolean;
-  blurReason?: string;
-  // For an opponent that was never a camera feed at all (the computer, in
-  // practice mode) - shown instead of the video element and the "waiting
-  // for camera" fallback.
+  // Drops the sightscreen over the feed. Used on the opponent's tile
+  // through the throw window so nobody can read the other person's hand
+  // off the live video and copy it. This used to be a blur; a shutter is
+  // the better answer because a blur can be squinted through and says
+  // nothing about why it is there, whereas a sightscreen coming down is
+  // both opaque and self-explaining. See `shuttered` in page.tsx for why
+  // lifting it exactly when it lifts is safe.
+  shuttered?: boolean;
+  shutterReason?: string;
+  // An opponent that never had a camera at all (the computer, in
+  // practice mode) - shown instead of the video element.
   placeholder?: ReactNode;
 }
 
@@ -29,8 +30,8 @@ export function VideoTile({
   muted = false,
   tone,
   videoRef: externalRef,
-  blurred = false,
-  blurReason = "Hidden for now",
+  shuttered = false,
+  shutterReason = "Hidden for now",
   placeholder,
 }: VideoTileProps) {
   const internalRef = useRef<HTMLVideoElement | null>(null);
@@ -43,28 +44,49 @@ export function VideoTile({
   }, [stream, videoRef]);
 
   return (
-    <div
-      className="nb-video-tile"
-      style={{ borderColor: tone === "peer" ? "var(--nb-pink)" : "var(--nb-ink)" }}
-    >
-      {!placeholder && (
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted={muted}
-          className={`${mirrored ? "mirror" : ""} ${blurred ? "nb-blurred" : ""}`}
-        />
-      )}
-      {placeholder && <div className="absolute inset-0">{placeholder}</div>}
-      {!stream && !placeholder && <div className="nb-video-waiting">Waiting for camera…</div>}
-      {blurred && stream && (
-        <div className="nb-video-blur-overlay">
-          <span className="text-3xl">🙈</span>
-          <span className="nb-video-blur-chip">{blurReason}</span>
+    <div className="gc-win">
+      <div
+        className="gc-win-bar"
+        style={
+          tone === "peer"
+            ? { background: "var(--gc-red)", color: "var(--gc-paper)" }
+            : undefined
+        }
+      >
+        <span className="gc-win-dots" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className="gc-win-title">{label}</span>
+      </div>
+
+      <div className="gc-tile">
+        {!placeholder && (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted={muted}
+            className={mirrored ? "mirror" : undefined}
+          />
+        )}
+        {placeholder}
+        {!stream && !placeholder && (
+          <div className="gc-tile-wait">Waiting for camera</div>
+        )}
+
+        {/* Always mounted so it slides rather than appears. A shutter that
+            pops into existence reads as a glitch; one that drops reads as
+            a mechanism. */}
+        <div
+          className={`gc-screen ${shuttered ? "gc-screen--down" : ""}`}
+          aria-hidden={!shuttered}
+        >
+          <p className="gc-screen-text">Sightscreen</p>
+          <p className="gc-label">{shutterReason}</p>
         </div>
-      )}
-      <span className="nb-video-label">{label}</span>
+      </div>
     </div>
   );
 }

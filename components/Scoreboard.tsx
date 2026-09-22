@@ -2,6 +2,10 @@
 
 import type { GameState, Role } from "@/lib/gameEngine";
 
+/** The manual tin scoreboard you get at a real ground: dark board,
+ *  hanging plates, runs set in the biggest numerals on the page. This is
+ *  the actual score display rather than a styled text row, because
+ *  during a match the score is the thing a player looks at most. */
 export function Scoreboard({
   state,
   self,
@@ -14,50 +18,55 @@ export function Scoreboard({
   peerName: string;
 }) {
   const nameFor = (role: Role) => (role === self ? selfName : peerName);
+  const battingNow = (role: Role) =>
+    state.battingFirst !== null &&
+    state.currentInnings === (state.battingFirst === role ? 1 : 2);
+
+  // Always you on the left. Ordering by host/guest instead would put the
+  // player on whichever side the connection happened to assign, so in
+  // practice mode you read your own score second.
+  const mine: Role = self;
+  const theirs: Role = self === "host" ? "guest" : "host";
 
   return (
-    <div className="nb-scoreboard">
-      <ScoreLine
-        name={nameFor("host")}
-        record={state.innings.host}
-        highlight={state.battingFirst !== null && state.currentInnings === (state.battingFirst === "host" ? 1 : 2)}
+    <div className="gc-board">
+      <Side
+        name={nameFor(mine)}
+        record={state.innings[mine]}
+        batting={battingNow(mine)}
       />
-      <span className="nb-vs">vs</span>
-      <ScoreLine
-        name={nameFor("guest")}
-        record={state.innings.guest}
-        highlight={state.battingFirst !== null && state.currentInnings === (state.battingFirst === "guest" ? 1 : 2)}
+      <div className="gc-board-mid">V</div>
+      <Side
+        name={nameFor(theirs)}
+        record={state.innings[theirs]}
+        batting={battingNow(theirs)}
       />
       {state.currentInnings === 2 && state.battingFirst && (
-        <div className="nb-chip nb-chip--pink hidden sm:inline-block">
-          Target {state.innings[state.battingFirst].runs + 1}
-        </div>
+        <p className="gc-board-target">
+          Needs {state.innings[state.battingFirst].runs + 1} to win
+        </p>
       )}
     </div>
   );
 }
 
-function ScoreLine({
+function Side({
   name,
   record,
-  highlight,
+  batting,
 }: {
   name: string;
   record: GameState["innings"][Role];
-  highlight: boolean;
+  batting: boolean;
 }) {
   return (
-    <div className="nb-score-line">
-      <span className="nb-score-who">{name}</span>
-      {highlight && !record.isOut && (
-        <div className="nb-chip nb-chip--green" style={{ marginTop: "1px" }}>
-          Batting
-        </div>
-      )}
-      <span className="nb-score-runs">
+    <div className="gc-board-side">
+      <p className="gc-board-who">{name}</p>
+      <p className="gc-board-runs">
         {record.runs}
-        {record.isOut && <span className="nb-score-out"> *out</span>}
-      </span>
+        {record.isOut && <span className="gc-board-out">out</span>}
+      </p>
+      {batting && !record.isOut && <span className="gc-board-flag">Batting</span>}
     </div>
   );
 }
