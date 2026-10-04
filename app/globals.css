@@ -955,10 +955,170 @@ select {
   display: block;
   background: var(--gc-cream);
   /* Reserved by the ratio so the art landing never shifts the page. */
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 4 / 3;
   object-fit: cover;
   object-position: center;
   order: -1;
+}
+
+/* Hero: two cartoon hands playing a looping round of hand cricket. */
+.gc-hh {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 14px 14px;
+  overflow: hidden;
+  /* Night sky fading to a floodlit pitch. */
+  background:
+    radial-gradient(ellipse 70% 38% at 50% 108%, #2f9d54 0%, #14572b 55%, transparent 100%),
+    linear-gradient(180deg, #060f2e 0%, #10286b 48%, #1d4fb0 100%);
+}
+/* Blurred stadium: floodlight glare up top, a warm bokeh crowd band. */
+.gc-hh::before {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  z-index: -2;
+  filter: blur(5px);
+  background:
+    radial-gradient(circle at 17% 20%, #fffbe6 0 6%, rgba(255, 238, 170, 0.75) 11%, transparent 22%),
+    radial-gradient(circle at 50% 14%, #fffbe6 0 5%, rgba(255, 238, 170, 0.7) 10%, transparent 19%),
+    radial-gradient(circle at 83% 20%, #fffbe6 0 6%, rgba(255, 238, 170, 0.75) 11%, transparent 22%),
+    radial-gradient(circle, rgba(255, 190, 90, 0.95) 0 2.4px, transparent 3.2px) 0 0 / 15px 13px,
+    radial-gradient(circle, rgba(255, 120, 90, 0.85) 0 2px, transparent 3px) 7px 6px / 19px 17px,
+    radial-gradient(circle, rgba(140, 200, 255, 0.8) 0 2px, transparent 3px) 3px 9px / 23px 21px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0 56%, transparent 72%);
+  mask-image: linear-gradient(180deg, #000 0 56%, transparent 72%);
+}
+/* Soft vignette keeps the hands and stickers readable. */
+.gc-hh::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 55%, transparent 40%, rgba(2, 8, 30, 0.55) 100%);
+}
+.gc-hh-top { display: flex; align-items: center; gap: 10px; }
+.gc-hh-pill {
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--gc-ink);
+  color: var(--gc-paper);
+  padding: 4px 10px;
+  border: 2px solid var(--gc-paper);
+}
+.gc-hh-score {
+  font-family: var(--font-num);
+  font-weight: 900;
+  font-size: 34px;
+  line-height: 1;
+  background: var(--gc-paper);
+  border: var(--gc-b) solid var(--gc-ink);
+  box-shadow: 3px 3px 0 0 var(--gc-ink);
+  padding: 2px 12px;
+  min-width: 64px;
+  text-align: center;
+  animation: gc-hh-tick 260ms var(--gc-ease-out);
+}
+.gc-hh-score.is-out { background: var(--gc-red); color: var(--gc-paper); }
+.gc-hh-stage {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+}
+.gc-hh-side {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 38%;
+  max-width: 170px;
+}
+.gc-hh-side--flip .gc-hh-hand { transform: scaleX(-1); }
+.gc-hh-hand { width: 100%; height: auto; display: block; overflow: visible; }
+.gc-hh-tag {
+  font-family: var(--font-num);
+  font-weight: 900;
+  font-size: 26px;
+  line-height: 1;
+  min-width: 46px;
+  text-align: center;
+  padding: 3px 8px;
+  border: var(--gc-b) solid var(--gc-ink);
+  box-shadow: 3px 3px 0 0 var(--gc-ink);
+  margin-top: 4px;
+}
+.gc-hh-tag--you { background: var(--gc-lime); }
+.gc-hh-tag--them { background: var(--gc-paper); }
+.gc-hh-label {
+  font-family: var(--font-num);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 6px;
+  color: var(--gc-paper);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+.gc-hh-vs {
+  align-self: center;
+  font-family: var(--font-num);
+  font-weight: 900;
+  font-size: 18px;
+  background: var(--gc-ink);
+  color: var(--gc-yellow);
+  padding: 6px 8px;
+  transform: rotate(-8deg);
+}
+.gc-hh-call { height: 46px; display: flex; align-items: center; justify-content: center; margin-top: 8px; }
+.gc-hh-sticker {
+  font-family: var(--font-num);
+  font-weight: 900;
+  font-size: 26px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 4px 16px;
+  border: var(--gc-b-lg) solid var(--gc-ink);
+  box-shadow: 5px 5px 0 0 var(--gc-ink);
+  animation: gc-hh-slam 420ms var(--gc-ease-out) both;
+}
+.gc-hh-sticker.is-out { background: var(--gc-red); color: var(--gc-paper); }
+.gc-hh-sticker.is-runs { background: var(--gc-lime); }
+.gc-hh-sticker.is-six { background: var(--gc-blue); color: var(--gc-paper); }
+.gc-hh-shake { animation: gc-hh-shake 450ms ease-in-out infinite; transform-origin: 50% 90%; }
+.gc-hh-shake--b { animation-delay: 60ms; }
+.gc-hh-pop { animation: gc-hh-pop 380ms var(--gc-ease-out) both; transform-origin: 50% 90%; }
+.gc-hh-side { width: 40%; }
+
+@keyframes gc-hh-shake {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-16px) rotate(4deg); }
+}
+@keyframes gc-hh-pop {
+  0% { transform: translateY(14px) scale(0.85); }
+  60% { transform: translateY(-8px) scale(1.06); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes gc-hh-slam {
+  0% { transform: scale(2.2) rotate(-10deg); opacity: 0; }
+  100% { transform: scale(1) rotate(-3deg); opacity: 1; }
+}
+@keyframes gc-hh-tick {
+  0% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gc-hh-shake, .gc-hh-pop, .gc-hh-sticker, .gc-hh-score { animation: none; }
 }
 
 @media (min-width: 900px) {
@@ -1008,3 +1168,156 @@ select {
     to { opacity: 1; }
   }
 }
+
+
+/* ======================================================================
+   Home screen: a floodlit stadium, out of focus, behind everything.
+   Scoped to .gc-home so the in-match screens keep their own look.
+   ====================================================================== */
+.gc-stadium {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, #050c20 0%, #09142e 40%, #0a1830 70%, #060d1d 100%);
+}
+/* A real night-match photo, softly out of focus. Only the top of it shows
+   (floodlights and packed stands); the lower part fades into the navy. */
+.gc-stadium::before {
+  content: "";
+  position: absolute;
+  top: -24px;
+  left: -24px;
+  right: -24px;
+  height: min(82vh, 62vw + 160px);
+  min-height: 460px;
+  background: url("/stadium-night.jpg") center top / cover no-repeat;
+  filter: blur(6px) saturate(1.12) brightness(0.9);
+  -webkit-mask-image: linear-gradient(180deg, #000 50%, transparent 86%);
+  mask-image: linear-gradient(180deg, #000 50%, transparent 86%);
+  animation: gc-lights-on 1600ms var(--gc-ease-out) both;
+}
+/* Keeps the type on the left readable and the edges settled. */
+.gc-stadium::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(3, 8, 22, 0.6) 0%, rgba(3, 8, 22, 0.12) 55%, rgba(3, 8, 22, 0.3) 100%),
+    radial-gradient(ellipse at 50% 45%, transparent 50%, rgba(2, 6, 18, 0.5) 100%);
+}
+@keyframes gc-lights-on {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.gc-home {
+  position: relative;
+  z-index: 1;
+  color: #f6efe0;
+}
+.gc-home .gc-display { color: #f6efe0; }
+.gc-home .gc-accent { color: #f4bf50; }
+.gc-home .gc-lede { color: rgba(246, 239, 224, 0.82); }
+.gc-home .gc-credit { color: rgba(246, 239, 224, 0.4); }
+
+.gc-home .gc-badge {
+  background: #a8322a;
+  color: #f6efe0;
+  border: 2px solid rgba(246, 239, 224, 0.9);
+  border-radius: 999px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Buttons: a cream frame around a muted colour, lifted by a soft shadow. */
+.gc-home .gc-btn {
+  border: 4px solid #f3ecdc;
+  border-radius: 6px;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
+  color: #0b1530;
+  transition:
+    transform 500ms cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 500ms cubic-bezier(0.32, 0.72, 0, 1),
+    filter 500ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.gc-home .gc-btn--red { background: #b83a2e; color: #fbf4e6; }
+.gc-home .gc-btn--yellow { background: #f4bf50; }
+.gc-home .gc-btn:not(.gc-btn--red):not(.gc-btn--yellow) { background: #fbf6ea; }
+@media (hover: hover) {
+  .gc-home .gc-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 32px rgba(0, 0, 0, 0.5);
+    filter: brightness(1.05);
+  }
+}
+.gc-home .gc-btn:active {
+  transform: scale(0.985);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+}
+
+/* The hands sit in a glass tray: a faint outer shell, a darker inner core. */
+.gc-home .gc-hh {
+  border: 1px solid rgba(246, 239, 224, 0.16);
+  border-radius: 30px;
+  padding: 10px;
+  background: rgba(246, 239, 224, 0.05);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+}
+.gc-home .gc-hh::before { content: none; }
+.gc-home .gc-hh::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  z-index: -1;
+  border-radius: 22px;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 110%, rgba(110, 160, 215, 0.2), transparent 70%),
+    linear-gradient(180deg, rgba(7, 14, 36, 0.55), rgba(7, 14, 36, 0.75));
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.14);
+}
+.gc-home .gc-hh-top { padding: 4px 6px 0; }
+.gc-home .gc-hh-pill {
+  background: rgba(246, 239, 224, 0.1);
+  color: #f6efe0;
+  border: 1px solid rgba(246, 239, 224, 0.3);
+  border-radius: 999px;
+}
+.gc-home .gc-hh-score,
+.gc-home .gc-hh-tag {
+  border: 2px solid #f3ecdc;
+  border-radius: 12px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+  color: #0b1530;
+}
+.gc-home .gc-hh-score { background: #fbf6ea; }
+.gc-home .gc-hh-score.is-out { background: #b83a2e; color: #fbf4e6; }
+.gc-home .gc-hh-tag--you { background: #f4bf50; }
+.gc-home .gc-hh-tag--them { background: #fbf6ea; }
+.gc-home .gc-hh-vs {
+  background: rgba(246, 239, 224, 0.1);
+  color: #f4bf50;
+  border: 1px solid rgba(246, 239, 224, 0.25);
+  border-radius: 999px;
+  padding: 8px 10px;
+}
+.gc-home .gc-hh-sticker {
+  border: 3px solid #f3ecdc;
+  border-radius: 12px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
+  color: #0b1530;
+}
+.gc-home .gc-hh-sticker.is-out { background: #b83a2e; color: #fbf4e6; }
+.gc-home .gc-hh-sticker.is-runs { background: #f4bf50; }
+.gc-home .gc-hh-sticker.is-six { background: #2f67d8; color: #fbf4e6; }
+
+/* Ticker: a quiet glass strip, not a black bar. */
+.gc-home .gc-ticker {
+  border: 0;
+  border-top: 1px solid rgba(246, 239, 224, 0.14);
+  background: rgba(4, 9, 24, 0.82);
+}
+.gc-home .gc-ticker span { color: #f4bf50; font-size: 13px; }
+
+.gc-home .gc-hh-side { width: 46%; max-width: 210px; }
+.gc-home .gc-hh-stage { gap: 0; padding-bottom: 4px; }

@@ -16,6 +16,7 @@ import {
 import { VideoTile } from "@/components/VideoTile";
 import { Countdown } from "@/components/Countdown";
 import { Scoreboard } from "@/components/Scoreboard";
+import { HeroHands } from "@/components/HeroHands";
 import { usePeerRoom, LOBBY_HOST_ID, type RoomStrategy } from "@/lib/usePeerRoom";
 import { useHandDetector } from "@/lib/handDetector";
 import { computerThrow, computerSideChoice } from "@/lib/computerOpponent";
@@ -53,8 +54,6 @@ const ICON_STROKE = 2.4;
 
 // The illustrations. Generated for this site rather than stock, so the
 // palette in globals.css and the art are sampled from each other.
-const ART_KIT =
-  "https://cdn.gamma.app/hc6lzg3dk8ql7jy/design-anything/ERXDKWkGNAgsSevviC2zV/jxKiHnPPm8XtiaUn2XDxN.jpg";
 const ART_EMPTY_GULLY =
   "https://cdn.gamma.app/hc6lzg3dk8ql7jy/design-anything/eO4ws510oCtZ7mzWfFfI3/E0sh_gQAEkLmwfFupw6iv.jpg";
 
@@ -491,8 +490,8 @@ export default function HomePage() {
   if (!started && homeView === "menu") {
     return (
       <>
-        <div className="gc-ground" />
-        <div className="gc-page">
+        <div className="gc-stadium" aria-hidden="true" />
+        <div className="gc-page gc-home">
         <div className="gc-screen-wrap">
           <div className="gc-center">
             <div className="gc-hero">
@@ -535,12 +534,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className="gc-hero-art"
-                src={ART_KIT}
-                alt="A cricket bat, ball and stumps drawn in flat bright colours"
-              />
+              <HeroHands />
             </div>
           </div>
 
