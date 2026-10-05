@@ -16,6 +16,9 @@ export type GameMessage =
   | { type: "throw"; seq: number; value: number }
   | { type: "choose-side"; choice: Side }
   | { type: "rematch" }
+  // Either player pressing "Continue" during the innings break; the second
+  // innings starts as soon as both have, or when the break times out.
+  | { type: "continue"; seq: number }
   // Latency probe: intercepted inside usePeerRoom itself (never reaches
   // the game's onMessage handler) so the round-trip time between the two
   // players can be measured and used to time the synced countdown.

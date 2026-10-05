@@ -41,7 +41,8 @@ import {
 
 const COUNTDOWN_MS = 3000; // 3, 2, 1
 const RESULT_PAUSE_MS = 2400;
-const BREAK_PAUSE_MS = 3400;
+// How long the innings break waits for both players to press Continue.
+const BREAK_PAUSE_MS = 10000;
 const SELF_LABEL = "You";
 // How far back the throw instant looks for the number being held up.
 const READING_WINDOW_MS = 600;
@@ -185,6 +186,8 @@ export default function HomePage() {
     setClaiming(false);
     if (result === "username-taken") setUsernameError("That username is taken. Try another.");
     else if (result === "name-taken") setUsernameError("Someone already has that name. Try another.");
+    else if (result === "signups-off")
+      setUsernameError("Sign-ups are switched off on the server. Enable anonymous sign-ins in Supabase.");
     else if (result === "error") setUsernameError("Could not save that. Check your connection.");
   };
 
@@ -252,6 +255,11 @@ export default function HomePage() {
   // re-run its effect whenever the peer's ready seq changes, including
   // when it arrives after we're already sitting in throw-ready.
   const [peerReadySeq, setPeerReadySeq] = useState<number | null>(null);
+  // Which ball (seq) each side pressed "Continue" on during the innings
+  // break. Keyed by seq so a press can never leak into a later break.
+  const [selfContinuedSeq, setSelfContinuedSeq] = useState<number | null>(null);
+  const [peerContinuedSeq, setPeerContinuedSeq] = useState<number | null>(null);
+  const [breakSecondsLeft, setBreakSecondsLeft] = useState(BREAK_PAUSE_MS / 1000);
   // The computer's most recent throw, for the vs-computer opponent tile -
   // there's no video to reveal it, so we just show the number once it's
   // been thrown.
@@ -279,6 +287,9 @@ export default function HomePage() {
         break;
       case "ready":
         setPeerReadySeq(msg.seq);
+        break;
+      case "continue":
+        setPeerContinuedSeq(msg.seq);
         break;
       case "start-countdown": {
         // leadMs is "how long from now", so the two devices' clocks never
@@ -502,10 +513,6 @@ export default function HomePage() {
       const t = setTimeout(() => setGame((s) => nextBall(s)), RESULT_PAUSE_MS);
       return () => clearTimeout(t);
     }
-    if (game.phase === "innings-break") {
-      const t = setTimeout(() => setGame((s) => startSecondInnings(s)), BREAK_PAUSE_MS);
-      return () => clearTimeout(t);
-    }
     if (game.phase === "toss-result") {
       const t = setTimeout(
         () => setGame((s) => ({ ...s, phase: "choose-side" })),
@@ -514,6 +521,39 @@ export default function HomePage() {
       return () => clearTimeout(t);
     }
   }, [game.phase]);
+
+  // Innings break: the second innings starts when both players have pressed
+  // Continue, or when the clock runs out - whichever comes first. The
+  // computer always "continues" instantly.
+  useEffect(() => {
+    if (game.phase !== "innings-break") return;
+    const startedAt = Date.now();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBreakSecondsLeft(BREAK_PAUSE_MS / 1000);
+    const tick = setInterval(() => {
+      const left = Math.max(0, Math.ceil((BREAK_PAUSE_MS - (Date.now() - startedAt)) / 1000));
+      setBreakSecondsLeft(left);
+    }, 250);
+    const timeout = setTimeout(() => setGame((s) => startSecondInnings(s)), BREAK_PAUSE_MS);
+    return () => {
+      clearInterval(tick);
+      clearTimeout(timeout);
+    };
+  }, [game.phase]);
+
+  useEffect(() => {
+    if (game.phase !== "innings-break") return;
+    const selfDone = selfContinuedSeq === game.seq;
+    const peerDone = mode === "computer" || peerContinuedSeq === game.seq;
+    // Reacting to the peer's message arriving (external), not derived state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (selfDone && peerDone) setGame((s) => startSecondInnings(s));
+  }, [game.phase, game.seq, mode, selfContinuedSeq, peerContinuedSeq]);
+
+  const handleContinue = () => {
+    setSelfContinuedSeq(game.seq);
+    sendMessage({ type: "continue", seq: game.seq });
+  };
 
   const handleTossCall = (call: "odd" | "even") => {
     setGame((s) => beginTossThrow(s, call));
@@ -568,9 +608,6 @@ export default function HomePage() {
           <div className="gc-center">
             <div className="gc-hero">
               <div className="gc-stagger flex flex-col items-start gap-5">
-                <span className="gc-badge gc-badge--red">
-                  <IconHandStop size={13} stroke={ICON_STROKE} /> Live on camera
-                </span>
 
                 <h1 className="gc-display">
                   Hand <span className="gc-accent">Cricket</span> Omegle
@@ -584,17 +621,17 @@ export default function HomePage() {
                 <div className="flex w-full flex-col gap-3">
                   <button
                     className="gc-btn gc-btn--lg gc-btn--red"
-                    onClick={() => enter("stranger")}
-                  >
-                    <IconWorld size={24} stroke={ICON_STROKE} />
-                    Play a stranger
-                  </button>
-                  <button
-                    className="gc-btn gc-btn--lg gc-btn--yellow"
                     onClick={() => enter("friends")}
                   >
                     <IconLock size={24} stroke={ICON_STROKE} />
                     Play a friend
+                  </button>
+                  <button
+                    className="gc-btn gc-btn--lg gc-btn--yellow"
+                    onClick={() => enter("stranger")}
+                  >
+                    <IconWorld size={24} stroke={ICON_STROKE} />
+                    Play a stranger
                   </button>
                   <button
                     className="gc-btn gc-btn--lg"
@@ -664,12 +701,7 @@ export default function HomePage() {
 
                 {homeView === "login" && auth.status !== "loading" && (
                   <>
-                    <div>
-                      <h1 className="gc-display gc-display--sm">Create your name</h1>
-                      <p className="gc-lede mt-2">
-                        Saved on this browser, so you only do this once. Nobody else can take it.
-                      </p>
-                    </div>
+                    <h1 className="gc-display gc-display--sm">Create your name</h1>
                     <div className="gc-panel gc-panel--lime">
                       <p className="gc-label">Your name</p>
                       <input
@@ -698,7 +730,6 @@ export default function HomePage() {
                         {claiming ? "Checking" : "Create"}
                       </button>
                       {usernameError && <p className="gc-error">{usernameError}</p>}
-                      <p className="gc-lede mt-2">3 to 16 letters, numbers, - or _</p>
                     </div>
                   </>
                 )}
@@ -930,44 +961,6 @@ export default function HomePage() {
     );
   }
 
-  if (game.phase === "game-over") {
-    const won = game.winner === role;
-    const tone =
-      game.winner === "tie" ? "gc-card--yellow" : won ? "gc-card--lime" : "gc-card--red";
-    const heading =
-      game.winner === "tie" ? "Dead heat" : won ? "You won" : "You lost";
-    return (
-      <>
-        <div className="gc-ground gc-ground--cream" />
-        <div className="gc-screen-wrap">
-          <div className="gc-center">
-            <div className={`gc-card ${tone} gc-enter w-full max-w-md text-center`}>
-              <span className="gc-badge">
-                <IconTrophy size={13} stroke={ICON_STROKE} /> Match over
-              </span>
-              <h1 className="gc-display mt-4">{heading}</h1>
-
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <FinalScore label={SELF_LABEL} runs={game.innings[role].runs} />
-                <FinalScore
-                  label={PEER_LABEL}
-                  runs={opponentRole ? game.innings[opponentRole].runs : 0}
-                />
-              </div>
-
-              <button
-                className="gc-btn gc-btn--ink mt-6 w-full"
-                onClick={() => window.location.reload()}
-              >
-                Play again
-              </button>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
       <div className="gc-pitch" />
@@ -1096,14 +1089,27 @@ export default function HomePage() {
             </div>
           )}
 
+          {game.phase === "game-over" && (
+            <GameOverPanel
+              winner={game.winner}
+              role={role}
+              selfRuns={role ? game.innings[role].runs : 0}
+              peerRuns={opponentRole ? game.innings[opponentRole].runs : 0}
+              peerName={PEER_LABEL}
+              onBack={leaveToMenu}
+            />
+          )}
+
           {game.phase === "innings-break" && (
-            <div className="gc-phase gc-phase--yellow">
-              <h2 className="gc-phase-head">Innings break</h2>
-              <p className="gc-phase-body">
-                {isSelfBatting ? "You are" : `${PEER_LABEL} is`} out. Second innings
-                starting.
-              </p>
-            </div>
+            <InningsBreakPanel
+              batting={isSelfBatting}
+              firstInningsRuns={batter ? game.innings[batter].runs : 0}
+              secondsLeft={breakSecondsLeft}
+              youContinued={selfContinuedSeq === game.seq}
+              peerContinued={mode === "computer" || peerContinuedSeq === game.seq}
+              peerName={PEER_LABEL}
+              onContinue={handleContinue}
+            />
           )}
         </div>
       </main>
@@ -1122,11 +1128,120 @@ function BackButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function FinalScore({ label, runs }: { label: string; runs: number }) {
+function InningsBreakPanel({
+  batting,
+  firstInningsRuns,
+  secondsLeft,
+  youContinued,
+  peerContinued,
+  peerName,
+  onContinue,
+}: {
+  batting: boolean;
+  firstInningsRuns: number;
+  secondsLeft: number;
+  youContinued: boolean;
+  peerContinued: boolean;
+  peerName: string;
+  onContinue: () => void;
+}) {
   return (
-    <div className="gc-panel bg-white text-left">
-      <p className="gc-label">{label}</p>
-      <p className="gc-num mt-1 text-4xl leading-none">{runs}</p>
+    <div className="gc-phase gc-phase--yellow">
+      <h2 className="gc-phase-head">
+        {batting ? "You just got out" : `${peerName} is out`}
+      </h2>
+      <p className="gc-break-score">
+        {batting ? (
+          <>
+            Your total score is <b>{firstInningsRuns}</b>
+          </>
+        ) : (
+          <>
+            You have to chase <b>{firstInningsRuns}</b>
+          </>
+        )}
+      </p>
+      <p className="gc-phase-body">
+        {batting
+          ? `${peerName} needs ${firstInningsRuns + 1} to win.`
+          : `Score ${firstInningsRuns + 1} to win, ${firstInningsRuns} to tie.`}
+      </p>
+      <div className="gc-phase-row mt-3 items-center">
+        <button className="gc-btn gc-btn--ink" onClick={onContinue} disabled={youContinued}>
+          {youContinued ? "Waiting" : "Continue"}
+        </button>
+        <span className="gc-badge gc-num">
+          {peerContinued ? `${peerName} is ready` : `${secondsLeft}s`}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+const CONFETTI = Array.from({ length: 28 }, (_, i) => ({
+  left: (i * 37) % 100,
+  delay: ((i * 53) % 20) / 10,
+  duration: 2.4 + ((i * 29) % 15) / 10,
+  color: ["var(--gc-lime)", "var(--gc-yellow)", "var(--gc-red)", "var(--gc-blue)"][i % 4],
+  rotate: (i * 47) % 360,
+}));
+
+/** End of match, shown on top of the live video tiles so the cameras and
+ *  audio stay on. The winner gets confetti; the loser a flat, drained red.
+ *  The match only really ends when someone presses Back. */
+function GameOverPanel({
+  winner,
+  role,
+  selfRuns,
+  peerRuns,
+  peerName,
+  onBack,
+}: {
+  winner: Role | "tie" | null;
+  role: Role | null;
+  selfRuns: number;
+  peerRuns: number;
+  peerName: string;
+  onBack: () => void;
+}) {
+  const tie = winner === "tie";
+  const won = !tie && winner === role;
+  const tone = tie ? "gc-over--tie" : won ? "gc-over--win" : "gc-over--loss";
+  return (
+    <div className={`gc-over ${tone}`}>
+      {won && (
+        <div className="gc-confetti" aria-hidden="true">
+          {CONFETTI.map((c, i) => (
+            <i
+              key={i}
+              style={{
+                left: `${c.left}%`,
+                background: c.color,
+                animationDelay: `${c.delay}s`,
+                animationDuration: `${c.duration}s`,
+                transform: `rotate(${c.rotate}deg)`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+      <span className="gc-badge">
+        <IconTrophy size={13} stroke={ICON_STROKE} /> Match over
+      </span>
+      <h1 className="gc-display mt-3">
+        {tie ? "Dead heat" : won ? "You won!" : "You lost"}
+      </h1>
+      <p className="gc-phase-body mt-2">
+        {tie
+          ? "Level on runs."
+          : won
+            ? `You beat ${peerName} ${selfRuns} to ${peerRuns}.`
+            : `${peerName} took it ${peerRuns} to ${selfRuns}.`}
+      </p>
+      <button className="gc-btn gc-btn--ink mt-4 w-full" onClick={onBack}>
+        <IconArrowLeft size={16} stroke={ICON_STROKE} />
+        Back
+      </button>
     </div>
   );
 }

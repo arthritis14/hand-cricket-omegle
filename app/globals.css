@@ -25,13 +25,15 @@
 
 :root {
   /* Sampled from the cricket illustrations. */
-  --gc-lime: #c8f03c;
-  --gc-red: #e8442c;
-  --gc-blue: #1b6ef3;
-  --gc-yellow: #ffc61a;
-  --gc-cream: #f2e9d5;
-  --gc-paper: #fffaf0;
-  --gc-ink: #0a0a0a;
+  --gc-lime: #7dffb2;
+  --gc-red: #8b6cff;
+  --gc-blue: #2f6bff;
+  --gc-yellow: #35e0d0;
+  --gc-cream: #cfd8ff;
+  --gc-paper: #eaeeff;
+  --gc-ink: #0d0b1f;
+  /* Only for defeat and errors - everything else stays cool. */
+  --gc-loss: #ff3b57;
 
   --background: var(--gc-cream);
   --foreground: var(--gc-ink);
@@ -183,7 +185,6 @@ select {
 /* Text on the two dark-enough fills flips to paper so contrast holds.
    Everything else keeps ink on a bright flat, which is comfortably
    past WCAG AA at every size used here. */
-.gc-card--red,
 .gc-card--blue {
   color: var(--gc-paper);
 }
@@ -290,7 +291,7 @@ select {
   box-shadow: var(--gc-shadow-press);
 }
 
-.gc-badge--red { background: var(--gc-red); color: var(--gc-paper); }
+.gc-badge--red { background: var(--gc-red); color: var(--gc-ink); }
 .gc-badge--lime { background: var(--gc-lime); }
 .gc-badge--yellow { background: var(--gc-yellow); }
 .gc-badge--blue { background: var(--gc-blue); color: var(--gc-paper); }
@@ -350,12 +351,12 @@ select {
 .gc-btn:disabled {
   cursor: not-allowed;
   transform: none;
-  background: #d8d2c4;
+  background: #b4bfe8;
   color: rgba(10, 10, 10, 0.5);
   box-shadow: var(--gc-shadow);
 }
 
-.gc-btn--red { background: var(--gc-red); color: var(--gc-paper); }
+.gc-btn--red { background: var(--gc-red); color: var(--gc-ink); }
 .gc-btn--lime { background: var(--gc-lime); }
 .gc-btn--blue { background: var(--gc-blue); color: var(--gc-paper); }
 .gc-btn--yellow { background: var(--gc-yellow); }
@@ -678,7 +679,7 @@ select {
 }
 
 .gc-phase--lime { background: var(--gc-lime); }
-.gc-phase--red { background: var(--gc-red); color: var(--gc-paper); }
+.gc-phase--red { background: var(--gc-red); color: var(--gc-ink); }
 .gc-phase--yellow { background: var(--gc-yellow); }
 
 .gc-phase-head {
@@ -983,9 +984,9 @@ select {
   z-index: -2;
   filter: blur(5px);
   background:
-    radial-gradient(circle at 17% 20%, #fffbe6 0 6%, rgba(255, 238, 170, 0.75) 11%, transparent 22%),
-    radial-gradient(circle at 50% 14%, #fffbe6 0 5%, rgba(255, 238, 170, 0.7) 10%, transparent 19%),
-    radial-gradient(circle at 83% 20%, #fffbe6 0 6%, rgba(255, 238, 170, 0.75) 11%, transparent 22%),
+    radial-gradient(circle at 17% 20%, #eaf6ff 0 6%, rgba(170, 220, 255, 0.75) 11%, transparent 22%),
+    radial-gradient(circle at 50% 14%, #eaf6ff 0 5%, rgba(170, 220, 255, 0.7) 10%, transparent 19%),
+    radial-gradient(circle at 83% 20%, #eaf6ff 0 6%, rgba(170, 220, 255, 0.75) 11%, transparent 22%),
     radial-gradient(circle, rgba(255, 190, 90, 0.95) 0 2.4px, transparent 3.2px) 0 0 / 15px 13px,
     radial-gradient(circle, rgba(255, 120, 90, 0.85) 0 2px, transparent 3px) 7px 6px / 19px 17px,
     radial-gradient(circle, rgba(140, 200, 255, 0.8) 0 2px, transparent 3px) 3px 9px / 23px 21px;
@@ -1214,35 +1215,35 @@ select {
 .gc-home {
   position: relative;
   z-index: 1;
-  color: #f6efe0;
+  color: #e8ecff;
 }
-.gc-home .gc-display { color: #f6efe0; }
-.gc-home .gc-accent { color: #f4bf50; }
-.gc-home .gc-lede { color: rgba(246, 239, 224, 0.82); }
-.gc-home .gc-credit { color: rgba(246, 239, 224, 0.4); }
+.gc-home .gc-display { color: #e8ecff; }
+.gc-home .gc-accent { color: #35e0d0; }
+.gc-home .gc-lede { color: rgba(232, 236, 255, 0.82); }
+.gc-home .gc-credit { color: rgba(232, 236, 255, 0.4); }
 
 .gc-home .gc-badge {
-  background: #a8322a;
-  color: #f6efe0;
-  border: 2px solid rgba(246, 239, 224, 0.9);
+  background: #6a45e8;
+  color: #e8ecff;
+  border: 2px solid rgba(232, 236, 255, 0.9);
   border-radius: 999px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 /* Buttons: a cream frame around a muted colour, lifted by a soft shadow. */
 .gc-home .gc-btn {
-  border: 4px solid #f3ecdc;
+  border: 4px solid #e8ecff;
   border-radius: 6px;
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
-  color: #0b1530;
+  color: #0d0b1f;
   transition:
     transform 500ms cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow 500ms cubic-bezier(0.32, 0.72, 0, 1),
     filter 500ms cubic-bezier(0.32, 0.72, 0, 1);
 }
-.gc-home .gc-btn--red { background: #b83a2e; color: #fbf4e6; }
-.gc-home .gc-btn--yellow { background: #f4bf50; }
-.gc-home .gc-btn:not(.gc-btn--red):not(.gc-btn--yellow) { background: #fbf6ea; }
+.gc-home .gc-btn--red { background: #8b6cff; color: #0d0b1f; }
+.gc-home .gc-btn--yellow { background: #35e0d0; }
+.gc-home .gc-btn:not(.gc-btn--red):not(.gc-btn--yellow) { background: #e8ecff; }
 @media (hover: hover) {
   .gc-home .gc-btn:hover {
     transform: translateY(-3px);
@@ -1257,10 +1258,10 @@ select {
 
 /* The hands sit in a glass tray: a faint outer shell, a darker inner core. */
 .gc-home .gc-hh {
-  border: 1px solid rgba(246, 239, 224, 0.16);
+  border: 1px solid rgba(232, 236, 255, 0.16);
   border-radius: 30px;
   padding: 10px;
-  background: rgba(246, 239, 224, 0.05);
+  background: rgba(232, 236, 255, 0.05);
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
 }
 .gc-home .gc-hh::before { content: none; }
@@ -1278,46 +1279,103 @@ select {
 }
 .gc-home .gc-hh-top { padding: 4px 6px 0; }
 .gc-home .gc-hh-pill {
-  background: rgba(246, 239, 224, 0.1);
-  color: #f6efe0;
-  border: 1px solid rgba(246, 239, 224, 0.3);
+  background: rgba(232, 236, 255, 0.1);
+  color: #e8ecff;
+  border: 1px solid rgba(232, 236, 255, 0.3);
   border-radius: 999px;
 }
 .gc-home .gc-hh-score,
 .gc-home .gc-hh-tag {
-  border: 2px solid #f3ecdc;
+  border: 2px solid #e8ecff;
   border-radius: 12px;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
-  color: #0b1530;
+  color: #0d0b1f;
 }
-.gc-home .gc-hh-score { background: #fbf6ea; }
-.gc-home .gc-hh-score.is-out { background: #b83a2e; color: #fbf4e6; }
-.gc-home .gc-hh-tag--you { background: #f4bf50; }
-.gc-home .gc-hh-tag--them { background: #fbf6ea; }
+.gc-home .gc-hh-score { background: #e8ecff; }
+.gc-home .gc-hh-score.is-out { background: #8b6cff; color: #0d0b1f; }
+.gc-home .gc-hh-tag--you { background: #35e0d0; }
+.gc-home .gc-hh-tag--them { background: #e8ecff; }
 .gc-home .gc-hh-vs {
-  background: rgba(246, 239, 224, 0.1);
-  color: #f4bf50;
-  border: 1px solid rgba(246, 239, 224, 0.25);
+  background: rgba(232, 236, 255, 0.1);
+  color: #35e0d0;
+  border: 1px solid rgba(232, 236, 255, 0.25);
   border-radius: 999px;
   padding: 8px 10px;
 }
 .gc-home .gc-hh-sticker {
-  border: 3px solid #f3ecdc;
+  border: 3px solid #e8ecff;
   border-radius: 12px;
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
-  color: #0b1530;
+  color: #0d0b1f;
 }
-.gc-home .gc-hh-sticker.is-out { background: #b83a2e; color: #fbf4e6; }
-.gc-home .gc-hh-sticker.is-runs { background: #f4bf50; }
-.gc-home .gc-hh-sticker.is-six { background: #2f67d8; color: #fbf4e6; }
+.gc-home .gc-hh-sticker.is-out { background: #8b6cff; color: #0d0b1f; }
+.gc-home .gc-hh-sticker.is-runs { background: #35e0d0; }
+.gc-home .gc-hh-sticker.is-six { background: #2f6bff; color: #0d0b1f; }
 
 /* Ticker: a quiet glass strip, not a black bar. */
 .gc-home .gc-ticker {
   border: 0;
-  border-top: 1px solid rgba(246, 239, 224, 0.14);
+  border-top: 1px solid rgba(232, 236, 255, 0.14);
   background: rgba(4, 9, 24, 0.82);
 }
-.gc-home .gc-ticker span { color: #f4bf50; font-size: 13px; }
+.gc-home .gc-ticker span { color: #35e0d0; font-size: 13px; }
 
 .gc-home .gc-hh-side { width: 46%; max-width: 210px; }
 .gc-home .gc-hh-stage { gap: 0; padding-bottom: 4px; }
+
+
+/* ---- Innings break and match over ---------------------------- */
+.gc-break-score {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  line-height: 1.15;
+  margin-top: 6px;
+}
+.gc-break-score b {
+  font-family: var(--font-num);
+  font-size: 1.15em;
+}
+
+.gc-over {
+  position: relative;
+  overflow: hidden;
+  border: var(--gc-b-lg) solid var(--gc-ink);
+  box-shadow: var(--gc-shadow);
+  padding: 20px;
+  text-align: center;
+  color: var(--gc-ink);
+  animation: gc-over-in var(--gc-enter) var(--gc-ease-out) both;
+}
+.gc-over--win { background: var(--gc-lime); }
+.gc-over--win h1 { animation: gc-over-pop 700ms var(--gc-ease-out) both; }
+.gc-over--tie { background: var(--gc-yellow); }
+/* Defeat: the one place red is allowed. Flat, heavy, no celebration. */
+.gc-over--loss { background: var(--gc-loss); color: var(--gc-ink); }
+.gc-over--loss h1 { transform: rotate(-2deg); }
+
+.gc-confetti { position: absolute; inset: 0; pointer-events: none; }
+.gc-confetti i {
+  position: absolute;
+  top: -14px;
+  width: 10px;
+  height: 14px;
+  border: 2px solid var(--gc-ink);
+  animation: gc-confetti-fall linear infinite;
+}
+
+@keyframes gc-over-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes gc-over-pop {
+  0% { transform: scale(0.6) rotate(-4deg); }
+  60% { transform: scale(1.12) rotate(2deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes gc-confetti-fall {
+  to { top: 105%; translate: 18px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gc-over, .gc-over--win h1 { animation: none; }
+  .gc-confetti { display: none; }
+}

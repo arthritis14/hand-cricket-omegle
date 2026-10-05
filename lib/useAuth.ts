@@ -9,7 +9,7 @@ import { supabase, authConfigured } from "./supabase";
 // but no name/username yet. "ready": has both.
 export type AuthStatus = "loading" | "signed-out" | "needs-username" | "ready";
 
-export type ClaimResult = "ok" | "username-taken" | "name-taken" | "error";
+export type ClaimResult = "ok" | "username-taken" | "name-taken" | "signups-off" | "error";
 
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
@@ -60,6 +60,7 @@ export function useAuth() {
       let userId = session?.user.id;
       if (!userId) {
         const anon = await supabase.auth.signInAnonymously();
+        if (anon.error?.code === "anonymous_provider_disabled") return "signups-off";
         if (anon.error || !anon.data.user) return "error";
         userId = anon.data.user.id;
       }
