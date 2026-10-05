@@ -8,9 +8,10 @@ export type GameMessage =
   | {
       type: "start-countdown";
       seq: number;
-      /** Shared epoch-ms target both sides count down to, so the 3-2-1
-       * lands at (close to) the same wall-clock moment on both screens. */
-      startsAt: number;
+      /** Milliseconds from now until the 3-2-1 begins. Relative on purpose:
+       * two devices' wall clocks routinely disagree by seconds, so an
+       * absolute timestamp would start one side's countdown early or late. */
+      leadMs: number;
     }
   | { type: "throw"; seq: number; value: number }
   | { type: "choose-side"; choice: Side }

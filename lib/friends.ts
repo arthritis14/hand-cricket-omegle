@@ -1,48 +1,64 @@
-// A friend list is just this browser's own local address book - each
-// person's saved friends live only in their own localStorage, not synced
-// anywhere. Two people "become friends" by each saving the other's
-// username; there's no mutual confirmation step, same as saving a phone
-// number.
+// A friend list lives in the signed-in account (hc_friendships), so it
+// follows a person to any browser. Adding someone is one-way, like saving a
+// phone number: it needs no confirmation from them. The username has to
+// belong to a real account, which is what makes a typo or a made-up name
+// fail instead of silently saving a dead entry.
+import { supabase } from "./supabase";
+
 export interface Friend {
   username: string;
   nickname: string;
 }
 
-const STORAGE_KEY = "hc-omegle-friends";
+export type AddFriendResult = "ok" | "not-found" | "error";
 
-export function loadFriends(): Friend[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (f): f is Friend =>
-        typeof f === "object" &&
-        f !== null &&
-        typeof (f as Friend).username === "string" &&
-        typeof (f as Friend).nickname === "string"
-    );
-  } catch {
+export async function loadFriends(userId: string): Promise<Friend[]> {
+  const { data, error } = await supabase
+    .from("hc_friendships")
+    .select("nickname, friend:hc_profiles!hc_friendships_friend_id_fkey(username, name)")
+    .eq("user_id", userId)
+    .order("created_at");
+  if (error || !data) {
+    console.warn("Could not load friends", error);
     return [];
   }
+  return data.flatMap((row) => {
+    const friend = Array.isArray(row.friend) ? row.friend[0] : row.friend;
+    return friend ? [{ username: friend.username, nickname: row.nickname || friend.name || friend.username }] : [];
+  });
 }
 
-function persist(friends: Friend[]) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(friends));
+export async function addFriend(
+  userId: string,
+  username: string,
+  nickname: string
+): Promise<AddFriendResult> {
+  const { data: profile, error: lookupError } = await supabase
+    .from("hc_profiles")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+  if (lookupError) return "error";
+  if (!profile) return "not-found";
+
+  const { error } = await supabase.from("hc_friendships").upsert({
+    user_id: userId,
+    friend_id: profile.id,
+    nickname: nickname.trim(),
+  });
+  return error ? "error" : "ok";
 }
 
-export function addFriend(friends: Friend[], username: string, nickname: string): Friend[] {
-  if (friends.some((f) => f.username === username)) return friends;
-  const next = [...friends, { username, nickname: nickname.trim() || username }];
-  persist(next);
-  return next;
-}
-
-export function removeFriend(friends: Friend[], username: string): Friend[] {
-  const next = friends.filter((f) => f.username !== username);
-  persist(next);
-  return next;
+export async function removeFriend(userId: string, username: string): Promise<void> {
+  const { data: profile } = await supabase
+    .from("hc_profiles")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+  if (!profile) return;
+  await supabase
+    .from("hc_friendships")
+    .delete()
+    .eq("user_id", userId)
+    .eq("friend_id", profile.id);
 }

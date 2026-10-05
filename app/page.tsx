@@ -21,13 +21,9 @@ import { usePeerRoom, LOBBY_HOST_ID, type RoomStrategy } from "@/lib/usePeerRoom
 import { useHandDetector } from "@/lib/handDetector";
 import { computerThrow, computerSideChoice } from "@/lib/computerOpponent";
 import { roomIdFromCode } from "@/lib/roomCode";
-import {
-  getSavedUsername,
-  saveUsername,
-  normalizeUsername,
-  isValidUsername,
-} from "@/lib/username";
+import { normalizeUsername, isValidUsername } from "@/lib/username";
 import { loadFriends, addFriend, removeFriend, type Friend } from "@/lib/friends";
+import { useAuth } from "@/lib/useAuth";
 import { usePresenceHub, type FriendStatus } from "@/lib/usePresenceHub";
 import type { GameMessage } from "@/lib/messages";
 import {
@@ -47,6 +43,25 @@ const COUNTDOWN_MS = 3000; // 3, 2, 1
 const RESULT_PAUSE_MS = 2400;
 const BREAK_PAUSE_MS = 3400;
 const SELF_LABEL = "You";
+// How far back the throw instant looks for the number being held up.
+const READING_WINDOW_MS = 600;
+
+/** The most common number seen over the last few frames (latest wins a
+ * tie). One mis-read frame at the moment of the throw can no longer turn a
+ * held-up 4 into a 0 - and a hand that briefly dropped out of detection
+ * still counts if it was seen a moment ago. */
+function steadiestRecentReading(readings: { at: number; count: number }[]): number | null {
+  const now = performance.now();
+  const tally = new Map<number, number>();
+  let best: number | null = null;
+  for (const r of readings) {
+    if (now - r.at > READING_WINDOW_MS) continue;
+    const n = (tally.get(r.count) ?? 0) + 1;
+    tally.set(r.count, n);
+    if (best === null || n >= (tally.get(best) ?? 0)) best = r.count;
+  }
+  return best;
+}
 
 // One stroke weight for every icon on the site, set here rather than per
 // use so nothing drifts thinner than the 3px borders around it.
@@ -64,7 +79,7 @@ type GameMode = "stranger" | "computer" | "private-host" | "private-guest";
 
 // What the pre-game "menu" card is currently showing. Only relevant before
 // a mode has actually been picked and `started` flips true.
-type HomeView = "menu" | "private-hub";
+type HomeView = "menu" | "login" | "private-hub";
 
 export default function HomePage() {
   // Nothing touches the camera or the matchmaking lobby until this is
@@ -82,30 +97,75 @@ export default function HomePage() {
   // username.
   const [roomCode, setRoomCode] = useState("");
 
-  // The Private Match hub: a persistent per-browser username ("account")
-  // once one's been claimed, plus a local address book of friends'
-  // usernames. Both are just localStorage - there's no real backend, same
-  // as everything else in this app.
-  const [username, setUsername] = useState<string | null>(null);
-  const [usernameInput, setUsernameInput] = useState("");
+  // The Private Match hub needs a real account: sign in (Google or email),
+  // then pick a unique username. The friend list is stored against the
+  // account, so it follows the person to any browser.
+  const auth = useAuth();
+  const username = auth.username;
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [nameInput, setNameInput] = useState("");
+  // What the person clicked on the home screen before being asked to create
+  // a profile - once they have one, they carry on to it.
+  const [pendingMode, setPendingMode] = useState<"stranger" | "computer" | "friends" | null>(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [claiming, setClaiming] = useState(false);
   const [friendUsernameInput, setFriendUsernameInput] = useState("");
   const [friendNicknameInput, setFriendNicknameInput] = useState("");
-  // A username being actively claimed for the first time - kept separate
-  // from `username` (the confirmed account) so the UI doesn't switch to
-  // "you have an account" until the claim genuinely succeeds. If it comes
-  // back "taken" or "error" instead, `username` never flips and the
-  // create-account form stays put.
-  const [pendingUsername, setPendingUsername] = useState<string | null>(null);
+  const [friendError, setFriendError] = useState<string | null>(null);
 
+  // Pulls the signed-in account's friend list. Synchronizing with an
+  // external store (the database), not derived state.
   useEffect(() => {
-    // One-time hydration from localStorage on mount - these can't be read
-    // during render (server has no localStorage), so this is genuinely
-    // synchronizing with an external system, not derived state.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUsername(getSavedUsername());
-    setFriends(loadFriends());
-  }, []);
+    if (auth.status !== "ready" || !auth.userId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFriends([]);
+      return;
+    }
+    let cancelled = false;
+    loadFriends(auth.userId).then((list) => {
+      if (!cancelled) setFriends(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.status, auth.userId]);
+
+  // Every entry point on the home screen goes through here. A returning
+  // browser already has a name and username, so it walks straight in; a
+  // new one is asked to create them first, then carries on to what it
+  // clicked.
+  const enter = (target: "stranger" | "computer" | "friends") => {
+    if (auth.status === "ready") {
+      proceed(target);
+    } else {
+      setPendingMode(target);
+      setHomeView("login");
+    }
+  };
+
+  // `justCreated`: a brand new profile has no friends yet, so before a
+  // stranger match it gets the add-friend screen once (it has a skip).
+  const proceed = (target: "stranger" | "computer" | "friends", justCreated = false) => {
+    if (target === "friends" || (justCreated && target === "stranger")) {
+      setPendingMode(target === "friends" ? null : target);
+      setHomeView("private-hub");
+      return;
+    }
+    setPendingMode(null);
+    setMode(target);
+    setStarted(true);
+  };
+
+  // Once the profile exists, a pending "create your name" screen moves on
+  // to whatever was clicked.
+  useEffect(() => {
+    if (homeView === "login" && auth.status === "ready") {
+      proceed(pendingMode ?? "friends", true);
+    }
+    // proceed only reads state that is current whenever this fires
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeView, auth.status]);
 
   // Only claims a presence beacon and polls friends while someone's
   // actually looking at this screen - not from the moment the app loads,
@@ -116,26 +176,16 @@ export default function HomePage() {
     friends,
   });
 
-  // A pending claim only becomes the account once it's actually
-  // confirmed - this is what turns the create-account form into the
-  // friends hub, and what persists the username for next visit.
-  useEffect(() => {
-    if (presence.claimStatus === "claimed" && pendingUsername) {
-      // Bridging a result from the presence hook (an external subscription)
-      // into this component's own account state - same idiom as the
-      // accepted-invite effect below.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setUsername(pendingUsername);
-      saveUsername(pendingUsername);
-      setPendingUsername(null);
-    }
-  }, [presence.claimStatus, pendingUsername]);
-
-  const handleCreateAccount = () => {
+  const handleClaimUsername = async () => {
     const name = normalizeUsername(usernameInput);
-    if (!isValidUsername(name)) return;
-    setPendingUsername(name);
-    presence.claimUsername(name);
+    if (!isValidUsername(name) || nameInput.trim().length < 2) return;
+    setClaiming(true);
+    setUsernameError(null);
+    const result = await auth.claimUsername(name, nameInput);
+    setClaiming(false);
+    if (result === "username-taken") setUsernameError("That username is taken. Try another.");
+    else if (result === "name-taken") setUsernameError("Someone already has that name. Try another.");
+    else if (result === "error") setUsernameError("Could not save that. Check your connection.");
   };
 
   // Once either side accepts an invite, both sides land here with the
@@ -152,16 +202,26 @@ export default function HomePage() {
     setStarted(true);
   }, [presence.accepted]);
 
-  const handleAddFriend = () => {
+  const handleAddFriend = async () => {
     const name = normalizeUsername(friendUsernameInput);
-    if (!isValidUsername(name) || name === username) return;
-    setFriends((f) => addFriend(f, name, friendNicknameInput));
-    setFriendUsernameInput("");
-    setFriendNicknameInput("");
+    if (!auth.userId || !isValidUsername(name) || name === username) return;
+    setFriendError(null);
+    const result = await addFriend(auth.userId, name, friendNicknameInput);
+    if (result === "not-found") {
+      setFriendError("Nobody has that name.");
+    } else if (result === "error") {
+      setFriendError("Could not add them. Try again.");
+    } else {
+      setFriends(await loadFriends(auth.userId));
+      setFriendUsernameInput("");
+      setFriendNicknameInput("");
+    }
   };
 
-  const handleRemoveFriend = (name: string) => {
-    setFriends((f) => removeFriend(f, name));
+  const handleRemoveFriend = async (name: string) => {
+    if (!auth.userId) return;
+    setFriends((f) => f.filter((x) => x.username !== name));
+    await removeFriend(auth.userId, name);
   };
 
   const handleCopyUsername = () => {
@@ -210,6 +270,7 @@ export default function HomePage() {
   // effect (after render, not during) rather than a dependency, same
   // idiom as onMessageRef inside usePeerRoom itself.
   const roleForResolveRef = useRef<Role | null>(null);
+  const rttRef = useRef<number | null>(null);
 
   const handleMessage = useCallback((msg: GameMessage) => {
     switch (msg.type) {
@@ -219,9 +280,13 @@ export default function HomePage() {
       case "ready":
         setPeerReadySeq(msg.seq);
         break;
-      case "start-countdown":
-        setGame((s) => ({ ...s, phase: "throw-countdown", countdownStartsAt: msg.startsAt }));
+      case "start-countdown": {
+        // leadMs is "how long from now", so the two devices' clocks never
+        // have to agree - only the (measured) trip time is subtracted.
+        const startsAt = Date.now() + Math.max(0, msg.leadMs - (rttRef.current ?? 0) / 2);
+        setGame((s) => ({ ...s, phase: "throw-countdown", countdownStartsAt: startsAt }));
         break;
+      }
       case "throw":
         setGame((s) => {
           // If we've already captured and confirmed our own value for
@@ -269,6 +334,10 @@ export default function HomePage() {
     roleForResolveRef.current = role;
   });
 
+  useEffect(() => {
+    rttRef.current = rtt;
+  });
+
   const { ready: detectorReady, detect } = useHandDetector(started);
 
   // Run hand detection continuously (not just once per throw) once the
@@ -278,6 +347,9 @@ export default function HomePage() {
   // reliable - and it lets us show live "can it see my hand" feedback,
   // so a miss is obvious immediately instead of only after a throw.
   const liveDetectionRef = useRef<{ count: number | null }>({ count: null });
+  // Recent readings, so the throw instant can ignore a single flickered or
+  // missed frame instead of locking in whatever the very last frame said.
+  const recentReadingsRef = useRef<{ at: number; count: number }[]>([]);
   const [liveHandCount, setLiveHandCount] = useState<number | null>(null);
   useEffect(() => {
     if (!detectorReady) return;
@@ -287,6 +359,12 @@ export default function HomePage() {
       if (video) {
         const result = detect(video);
         liveDetectionRef.current = result;
+        if (result.count !== null) {
+          const now = performance.now();
+          const recent = recentReadingsRef.current;
+          recent.push({ at: now, count: result.count });
+          while (recent.length > 0 && now - recent[0].at > READING_WINDOW_MS) recent.shift();
+        }
         setLiveHandCount(result.count);
       }
       rafId = requestAnimationFrame(loop);
@@ -347,7 +425,7 @@ export default function HomePage() {
       // doesn't sit around waiting longer than it needs to.
       const lead = rtt ? Math.min(3000, Math.max(500, rtt * 1.5 + 300)) : 900;
       const startsAt = Date.now() + lead;
-      sendMessage({ type: "start-countdown", seq: game.seq, startsAt });
+      sendMessage({ type: "start-countdown", seq: game.seq, leadMs: lead });
 
       setGame((s) => (s.phase === "throw-ready" ? { ...s, phase: "throw-countdown", countdownStartsAt: startsAt } : s));
     }
@@ -414,8 +492,7 @@ export default function HomePage() {
     // Numbers here run 0-6 (hand cricket, not a plain finger count: a
     // flat fist is a legitimate 0) - if no hand was seen at all, default
     // to 0 rather than inventing a throw.
-    const value = liveDetectionRef.current.count ?? 0;
-    lockInThrow(value);
+    lockInThrow(steadiestRecentReading(recentReadingsRef.current) ?? 0);
   }, [game.phase, game.seq, lockInThrow]);
 
   // Auto-advance through result/break screens - both sides hold identical
@@ -480,11 +557,6 @@ export default function HomePage() {
       ? "Up until the throw"
       : "Up until you both lock in";
 
-  const beginMode = (m: "stranger" | "computer") => {
-    setMode(m);
-    setStarted(true);
-  };
-
   // --- Render states ---
 
   if (!started && homeView === "menu") {
@@ -512,24 +584,31 @@ export default function HomePage() {
                 <div className="flex w-full flex-col gap-3">
                   <button
                     className="gc-btn gc-btn--lg gc-btn--red"
-                    onClick={() => beginMode("stranger")}
+                    onClick={() => enter("stranger")}
                   >
                     <IconWorld size={24} stroke={ICON_STROKE} />
                     Play a stranger
                   </button>
                   <button
                     className="gc-btn gc-btn--lg gc-btn--yellow"
-                    onClick={() => setHomeView("private-hub")}
+                    onClick={() => enter("friends")}
                   >
                     <IconLock size={24} stroke={ICON_STROKE} />
                     Play a friend
                   </button>
                   <button
                     className="gc-btn gc-btn--lg"
-                    onClick={() => beginMode("computer")}
+                    onClick={() => enter("computer")}
                   >
                     <IconRobot size={24} stroke={ICON_STROKE} />
                     Play the computer
+                  </button>
+                  <button
+                    className="gc-btn gc-btn--sm self-start"
+                    onClick={() => enter("friends")}
+                  >
+                    <IconUserPlus size={14} stroke={ICON_STROKE} />
+                    Add friends
                   </button>
                 </div>
               </div>
@@ -565,7 +644,7 @@ export default function HomePage() {
     return (
       <>
         <div className="gc-ground gc-ground--cream" />
-        <BackButton onClick={() => setHomeView("menu")} />
+        <BackButton onClick={() => { setPendingMode(null); setHomeView("menu"); }} />
         <div className="gc-screen-wrap">
           <div className="gc-center">
             <div className="gc-win gc-enter w-full max-w-md">
@@ -575,20 +654,32 @@ export default function HomePage() {
                   <i />
                   <i />
                 </span>
-                <span className="gc-win-title">Play a friend</span>
+                <span className="gc-win-title">{homeView === "login" ? "Create your name" : "Add friends"}</span>
               </div>
 
               <div className="flex flex-col gap-4 p-4">
-                {!username && (
+                {homeView === "login" && auth.status === "loading" && (
+                  <p className="gc-lede">One moment</p>
+                )}
+
+                {homeView === "login" && auth.status !== "loading" && (
                   <>
                     <div>
-                      <h1 className="gc-display gc-display--sm">Pick a name</h1>
+                      <h1 className="gc-display gc-display--sm">Create your name</h1>
                       <p className="gc-lede mt-2">
-                        Friends add you by this name and drop you straight into
-                        a match.
+                        Saved on this browser, so you only do this once. Nobody else can take it.
                       </p>
                     </div>
                     <div className="gc-panel gc-panel--lime">
+                      <p className="gc-label">Your name</p>
+                      <input
+                        value={nameInput}
+                        onChange={(e) => setNameInput(e.target.value)}
+                        placeholder="Arth"
+                        maxLength={20}
+                        className="gc-input mb-3"
+                      />
+                      <p className="gc-label">Your username</p>
                       <input
                         value={usernameInput}
                         onChange={(e) => setUsernameInput(normalizeUsername(e.target.value))}
@@ -601,32 +692,21 @@ export default function HomePage() {
                       />
                       <button
                         className="gc-btn gc-btn--red mt-3 w-full"
-                        disabled={
-                          !isValidUsername(usernameInput) ||
-                          presence.claimStatus === "claiming"
-                        }
-                        onClick={handleCreateAccount}
+                        disabled={!isValidUsername(usernameInput) || nameInput.trim().length < 2 || claiming}
+                        onClick={handleClaimUsername}
                       >
-                        {presence.claimStatus === "claiming" ? "Checking" : "Claim it"}
+                        {claiming ? "Checking" : "Create"}
                       </button>
-                      {presence.claimStatus === "taken" && (
-                        <p className="gc-error">
-                          Someone is using that right now. Try another.
-                        </p>
-                      )}
-                      {presence.claimStatus === "error" && (
-                        <p className="gc-error">
-                          Could not reach the network. Check your connection.
-                        </p>
-                      )}
+                      {usernameError && <p className="gc-error">{usernameError}</p>}
+                      <p className="gc-lede mt-2">3 to 16 letters, numbers, - or _</p>
                     </div>
                   </>
                 )}
 
-                {username && (
+                {homeView === "private-hub" && username && (
                   <>
                     <div className="gc-panel gc-panel--lime">
-                      <p className="gc-label">You are</p>
+                      <p className="gc-label">You are {auth.name}</p>
                       <div className="mt-1 flex items-center justify-between gap-3">
                         <p className="gc-username">{username}</p>
                         <button
@@ -637,6 +717,16 @@ export default function HomePage() {
                           Copy
                         </button>
                       </div>
+                      {presence.claimStatus === "taken" && (
+                        <p className="gc-error">
+                          You are already online in another tab. Invites reach that one.
+                        </p>
+                      )}
+                      {presence.claimStatus === "error" && (
+                        <p className="gc-error">
+                          Could not go online. Check your connection.
+                        </p>
+                      )}
                     </div>
 
                     {presence.incomingInvite && (
@@ -697,8 +787,18 @@ export default function HomePage() {
                           <IconUserPlus size={18} stroke={ICON_STROKE} />
                           Add
                         </button>
+                        {friendError && <p className="gc-error">{friendError}</p>}
                       </div>
                     </div>
+
+                    {pendingMode && (
+                      <button
+                        className="gc-btn w-full"
+                        onClick={() => proceed(pendingMode)}
+                      >
+                        Skip, just play
+                      </button>
+                    )}
 
                     <div>
                       <p className="gc-label">Your list</p>
