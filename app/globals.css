@@ -25,13 +25,13 @@
 
 :root {
   /* Sampled from the cricket illustrations. */
-  --gc-lime: #9be86b;
-  --gc-red: #ff8a3d;
-  --gc-blue: #2f6bff;
-  --gc-yellow: #ffc84a;
-  --gc-cream: #ffe9c7;
-  --gc-paper: #fff6e5;
-  --gc-ink: #1c1208;
+  --gc-lime: #8fd0ff;
+  --gc-red: #ff8fc0;
+  --gc-blue: #4a7dff;
+  --gc-yellow: #9cf0b4;
+  --gc-cream: #d6ecff;
+  --gc-paper: #f4fbff;
+  --gc-ink: #101322;
   /* Only for defeat and errors - everything else stays cool. */
   --gc-loss: #e11d48;
 
@@ -351,7 +351,7 @@ select {
 .gc-btn:disabled {
   cursor: not-allowed;
   transform: none;
-  background: #e3cfa6;
+  background: #b8cfe6;
   color: rgba(10, 10, 10, 0.5);
   box-shadow: var(--gc-shadow);
 }
@@ -1180,19 +1180,21 @@ select {
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: linear-gradient(180deg, #59b8ff 0%, #bfe6ff 45%, #ffe3b0 100%);
+  background: linear-gradient(180deg, #8fd0ff 0%, #d9f0ff 45%, #ffd6ea 100%);
 }
-/* A drawn daytime ground, softly out of focus. */
+/* A drawn daytime ground: sharp, flat colour, ink outlines. */
 .gc-stadium::before {
   content: "";
   position: absolute;
   top: -24px;
   left: -24px;
   right: -24px;
-  height: min(88vh, 66vw + 160px);
-  min-height: 480px;
+  height: max(42vw, 520px);
+  min-height: 520px;
   background: url("/stadium-day.svg") center top / cover no-repeat;
-  filter: blur(5px) saturate(1.1);
+  filter: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 62%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 62%, transparent 100%);
   animation: gc-lights-on 1200ms var(--gc-ease-out) both;
 }
 /* A warm sunlit veil keeps the type on the left readable. */
@@ -1201,8 +1203,8 @@ select {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(255, 243, 222, 0.62) 0%, rgba(255, 243, 222, 0.12) 55%, rgba(255, 243, 222, 0.0) 100%),
-    linear-gradient(180deg, transparent 70%, rgba(255, 227, 176, 0.7) 100%);
+    linear-gradient(90deg, rgba(244, 251, 255, 0.9) 0%, rgba(244, 251, 255, 0.55) 40%, rgba(244, 251, 255, 0.0) 70%),
+    linear-gradient(180deg, transparent 70%, rgba(255, 214, 234, 0.6) 100%);
 }
 @keyframes gc-lights-on {
   0% { opacity: 0; }
@@ -1216,12 +1218,12 @@ select {
 }
 /* Chunky ink offset keeps white type legible on any sky. */
 .gc-home .gc-display {
-  color: #fffaf0;
+  color: #ffffff;
   text-shadow: 4px 4px 0 var(--gc-ink);
 }
-.gc-home .gc-accent { color: #ff8a3d; }
+.gc-home .gc-accent { color: #ff6fb1; }
 .gc-home .gc-lede { color: var(--gc-ink); font-weight: 600; }
-.gc-home .gc-credit { color: rgba(28, 18, 8, 0.6); }
+.gc-home .gc-credit { color: rgba(16, 19, 34, 0.6); }
 
 .gc-home .gc-badge {
   background: var(--gc-yellow);
@@ -1242,9 +1244,9 @@ select {
     transform 160ms var(--gc-ease-out),
     box-shadow 160ms var(--gc-ease-out);
 }
-.gc-home .gc-btn--red { background: #ff8a3d; }
-.gc-home .gc-btn--yellow { background: #ffc84a; }
-.gc-home .gc-btn:not(.gc-btn--red):not(.gc-btn--yellow) { background: #fff6e5; }
+.gc-home .gc-btn--red { background: #ff8fc0; }
+.gc-home .gc-btn--yellow { background: #9cf0b4; }
+.gc-home .gc-btn:not(.gc-btn--red):not(.gc-btn--yellow) { background: #f4fbff; }
 @media (hover: hover) {
   .gc-home .gc-btn:hover {
     transform: translate(-2px, -2px);
@@ -1261,7 +1263,7 @@ select {
   border: 4px solid var(--gc-ink);
   border-radius: 0;
   padding: 10px;
-  background: #fff6e5;
+  background: #f4fbff;
   box-shadow: 8px 8px 0 0 var(--gc-ink);
 }
 .gc-home .gc-hh::before { content: none; }
@@ -1273,12 +1275,12 @@ select {
   pointer-events: none;
   border: 3px solid var(--gc-ink);
   background:
-    radial-gradient(ellipse 80% 40% at 50% 112%, #62c24d 0%, #3f9d3c 60%, transparent 100%),
-    linear-gradient(180deg, #6ec1ff 0%, #bfe6ff 62%, #ffe3b0 100%);
+    radial-gradient(ellipse 80% 40% at 50% 112%, #8de8a8 0%, #5fcf86 60%, transparent 100%),
+    linear-gradient(180deg, #6ec1ff 0%, #d9f0ff 62%, #ffd6ea 100%);
 }
 .gc-home .gc-hh-top { padding: 4px 6px 0; }
 .gc-home .gc-hh-pill {
-  background: #fff6e5;
+  background: #f4fbff;
   color: var(--gc-ink);
   border: 2px solid var(--gc-ink);
   border-radius: 999px;
@@ -1290,12 +1292,12 @@ select {
   box-shadow: 3px 3px 0 0 var(--gc-ink);
   color: var(--gc-ink);
 }
-.gc-home .gc-hh-score { background: #fff6e5; }
-.gc-home .gc-hh-score.is-out { background: var(--gc-loss); color: #fff6e5; }
-.gc-home .gc-hh-tag--you { background: #ffc84a; }
-.gc-home .gc-hh-tag--them { background: #fff6e5; }
+.gc-home .gc-hh-score { background: #f4fbff; }
+.gc-home .gc-hh-score.is-out { background: var(--gc-loss); color: #f4fbff; }
+.gc-home .gc-hh-tag--you { background: #9cf0b4; }
+.gc-home .gc-hh-tag--them { background: #f4fbff; }
 .gc-home .gc-hh-vs {
-  background: #fff6e5;
+  background: #f4fbff;
   color: var(--gc-ink);
   border: 2px solid var(--gc-ink);
   border-radius: 999px;
@@ -1307,9 +1309,9 @@ select {
   box-shadow: 4px 4px 0 0 var(--gc-ink);
   color: var(--gc-ink);
 }
-.gc-home .gc-hh-sticker.is-out { background: var(--gc-loss); color: #fff6e5; }
-.gc-home .gc-hh-sticker.is-runs { background: #ffc84a; }
-.gc-home .gc-hh-sticker.is-six { background: #2f6bff; color: #fff6e5; }
+.gc-home .gc-hh-sticker.is-out { background: var(--gc-loss); color: #f4fbff; }
+.gc-home .gc-hh-sticker.is-runs { background: #9cf0b4; }
+.gc-home .gc-hh-sticker.is-six { background: #2f6bff; color: #f4fbff; }
 
 /* Ticker: an ink strip with warm type. */
 .gc-home .gc-ticker {
@@ -1317,7 +1319,7 @@ select {
   border-top: 4px solid var(--gc-ink);
   background: var(--gc-ink);
 }
-.gc-home .gc-ticker span { color: #ffc84a; font-size: 13px; }
+.gc-home .gc-ticker span { color: #9cf0b4; font-size: 13px; }
 
 .gc-home .gc-hh-side { width: 46%; max-width: 210px; }
 .gc-home .gc-hh-stage { gap: 0; padding-bottom: 4px; }
@@ -1345,9 +1347,9 @@ select {
   color: var(--gc-ink);
   animation: gc-over-in var(--gc-enter) var(--gc-ease-out) both;
 }
-.gc-over--win { background: var(--gc-lime); }
+.gc-over--win { background: var(--gc-yellow); }
 .gc-over--win h1 { animation: gc-over-pop 700ms var(--gc-ease-out) both; }
-.gc-over--tie { background: var(--gc-yellow); }
+.gc-over--tie { background: var(--gc-lime); }
 /* Defeat: the one place red is allowed. Flat, heavy, no celebration. */
 .gc-over--loss { background: var(--gc-loss); color: var(--gc-ink); }
 .gc-over--loss h1 { transform: rotate(-2deg); }
