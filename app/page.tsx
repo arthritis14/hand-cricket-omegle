@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   IconArrowLeft,
+  IconArrowRight,
   IconCheck,
   IconCopy,
   IconHandStop,
@@ -630,43 +631,37 @@ export default function HomePage() {
           <div className="gc-center">
             <div className="gc-hero">
               <div className="gc-stagger flex flex-col items-start gap-5">
+                <span className="nb-sticker">1 v 1 / camera on / no sign up</span>
 
-                <h1 className="gc-display">
-                  Hand <span className="gc-accent">Cricket</span> Omegle
+                <h1 className="nb-title">
+                  <span className="nb-title-line">Hand</span>
+                  <span className="nb-title-line">Cricket</span>
+                  <span className="nb-title-line">Omegle</span>
                 </h1>
 
-                <p className="gc-lede">
+                <p className="nb-lede">
                   Get matched with a stranger. Throw your hand at the camera.
                   The site does the umpiring.
                 </p>
 
-                <div className="flex w-full flex-col gap-3">
-                  <button
-                    className="gc-btn gc-btn--lg gc-btn--red"
-                    onClick={() => enter("friends")}
-                  >
-                    <IconLock size={24} stroke={ICON_STROKE} />
+                <div className="nb-menu">
+                  <button className="nb-btn nb-btn--yellow" onClick={() => enter("friends")}>
+                    <IconLock size={26} stroke={ICON_STROKE} />
                     Play a friend
+                    <span className="nb-btn-arrow"><IconArrowRight size={22} stroke={ICON_STROKE} /></span>
                   </button>
-                  <button
-                    className="gc-btn gc-btn--lg gc-btn--yellow"
-                    onClick={() => enter("stranger")}
-                  >
-                    <IconWorld size={24} stroke={ICON_STROKE} />
+                  <button className="nb-btn nb-btn--pink" onClick={() => enter("stranger")}>
+                    <IconWorld size={26} stroke={ICON_STROKE} />
                     Play a stranger
+                    <span className="nb-btn-arrow"><IconArrowRight size={22} stroke={ICON_STROKE} /></span>
                   </button>
-                  <button
-                    className="gc-btn gc-btn--lg"
-                    onClick={() => enter("computer")}
-                  >
-                    <IconRobot size={24} stroke={ICON_STROKE} />
+                  <button className="nb-btn nb-btn--green" onClick={() => enter("computer")}>
+                    <IconRobot size={26} stroke={ICON_STROKE} />
                     Play the computer
+                    <span className="nb-btn-arrow"><IconArrowRight size={22} stroke={ICON_STROKE} /></span>
                   </button>
-                  <button
-                    className="gc-btn gc-btn--sm self-start"
-                    onClick={() => enter("friends")}
-                  >
-                    <IconUserPlus size={14} stroke={ICON_STROKE} />
+                  <button className="nb-btn nb-btn--sm" onClick={() => enter("friends")}>
+                    <IconUserPlus size={16} stroke={ICON_STROKE} />
                     Add friends
                   </button>
                 </div>

@@ -1,21 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 640" preserveAspectRatio="xMidYMin slice">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#8fd0ff"/>
-      <stop offset="1" stop-color="#d9f0ff"/>
+      <stop offset="0" stop-color="#8CC8FF"/>
+      <stop offset="1" stop-color="#E4F2FF"/>
     </linearGradient>
     <pattern id="crowdPink" width="18" height="14" patternUnits="userSpaceOnUse">
-      <rect width="18" height="14" fill="#ff9ecb"/>
-      <circle cx="4" cy="4" r="3" fill="#fff"/><circle cx="13" cy="5" r="3" fill="#7fc4ff"/>
-      <circle cx="9" cy="11" r="3" fill="#9cf0b4"/><circle cx="1" cy="12" r="2" fill="#111"/>
+      <rect width="18" height="14" fill="#FF6FB5"/>
+      <circle cx="4" cy="4" r="3" fill="#fff"/><circle cx="13" cy="5" r="3" fill="#6FA8FF"/>
+      <circle cx="9" cy="11" r="3" fill="#FFD60A"/><circle cx="1" cy="12" r="2" fill="#000"/>
     </pattern>
     <pattern id="crowdBlue" width="18" height="14" patternUnits="userSpaceOnUse">
-      <rect width="18" height="14" fill="#7fc4ff"/>
-      <circle cx="4" cy="4" r="3" fill="#fff"/><circle cx="13" cy="5" r="3" fill="#ff9ecb"/>
-      <circle cx="9" cy="11" r="3" fill="#9cf0b4"/><circle cx="16" cy="13" r="2" fill="#111"/>
+      <rect width="18" height="14" fill="#6FA8FF"/>
+      <circle cx="4" cy="4" r="3" fill="#fff"/><circle cx="13" cy="5" r="3" fill="#FF6FB5"/>
+      <circle cx="9" cy="11" r="3" fill="#FFD60A"/><circle cx="16" cy="13" r="2" fill="#000"/>
     </pattern>
   </defs>
-  <g stroke="#111" stroke-width="5" stroke-linejoin="round">
+  <g stroke="#000" stroke-width="5" stroke-linejoin="round">
     <rect width="1600" height="640" fill="url(#sky)" stroke="none"/>
 
     <!-- clouds -->
@@ -39,14 +39,14 @@
 
     <!-- scoreboard -->
     <rect x="770" y="200" width="14" height="110" fill="#c9d6e8"/><rect x="816" y="200" width="14" height="110" fill="#c9d6e8"/>
-    <rect x="690" y="118" width="220" height="100" fill="#111"/>
-    <g stroke="none"><rect x="710" y="136" width="70" height="26" fill="#9cf0b4"/><rect x="800" y="136" width="90" height="26" fill="#ff9ecb"/>
-    <rect x="710" y="176" width="180" height="22" fill="#7fc4ff"/></g>
+    <rect x="690" y="118" width="220" height="100" fill="#000"/>
+    <g stroke="none"><rect x="710" y="136" width="70" height="26" fill="#FFD60A"/><rect x="800" y="136" width="90" height="26" fill="#FF6FB5"/>
+    <rect x="710" y="176" width="180" height="22" fill="#6FA8FF"/></g>
 
     <!-- outfield, drawn first so the stands sit on it -->
-    <rect x="0" y="440" width="1600" height="200" fill="#8de8a8"/>
-    <g stroke="none" fill="#6fd68e"><rect x="0" y="520" width="1600" height="30"/><rect x="0" y="590" width="1600" height="30"/></g>
-    <path d="M610 640 L690 520 H910 L990 640 Z" fill="#f3e3b6" stroke-width="4"/>
+    <rect x="0" y="440" width="1600" height="200" fill="#9BE564"/>
+    <g stroke="none" fill="#86D656"><rect x="0" y="520" width="1600" height="30"/><rect x="0" y="590" width="1600" height="30"/></g>
+    <path d="M610 640 L690 520 H910 L990 640 Z" fill="#F7F1E3" stroke-width="4"/>
     <path d="M700 548 H900 M650 612 H950" stroke-width="3"/>
 
     <!-- upper stand roof and seating -->
@@ -61,10 +61,10 @@
     <!-- hoarding band -->
     <path d="M-10 462 Q800 402 1610 462 L1610 494 Q800 434 -10 494 Z" fill="#fff"/>
     <g stroke="none">
-      <path d="M100 470 L330 462 L330 482 L100 490 Z" fill="#ff9ecb"/>
-      <path d="M520 450 L760 436 L760 456 L520 470 Z" fill="#7fc4ff"/>
-      <path d="M840 436 L1080 450 L1080 470 L840 456 Z" fill="#9cf0b4"/>
-      <path d="M1270 462 L1500 470 L1500 490 L1270 482 Z" fill="#ff9ecb"/>
+      <path d="M100 470 L330 462 L330 482 L100 490 Z" fill="#FF6FB5"/>
+      <path d="M520 450 L760 436 L760 456 L520 470 Z" fill="#6FA8FF"/>
+      <path d="M840 436 L1080 450 L1080 470 L840 456 Z" fill="#FFD60A"/>
+      <path d="M1270 462 L1500 470 L1500 490 L1270 482 Z" fill="#FF6FB5"/>
     </g>
   </g>
 </svg>
