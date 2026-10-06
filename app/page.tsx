@@ -227,6 +227,28 @@ export default function HomePage() {
     await removeFriend(auth.userId, name);
   };
 
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editUsername, setEditUsername] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const startEditing = () => {
+    setEditName(auth.name ?? "");
+    setEditUsername(username ?? "");
+    setEditError(null);
+    setEditing(true);
+  };
+
+  const handleSaveProfile = async () => {
+    const nextUsername = normalizeUsername(editUsername);
+    if (!isValidUsername(nextUsername) || editName.trim().length < 2) return;
+    const result = await auth.updateProfile(nextUsername, editName);
+    if (result === "ok") setEditing(false);
+    else if (result === "username-taken") setEditError("That username is taken.");
+    else if (result === "name-taken") setEditError("Someone already has that name.");
+    else setEditError("Could not save that. Try again.");
+  };
+
   const handleCopyUsername = () => {
     if (!username) return;
     navigator.clipboard?.writeText(username).catch(() => {});
@@ -737,17 +759,59 @@ export default function HomePage() {
                 {homeView === "private-hub" && username && (
                   <>
                     <div className="gc-panel gc-panel--lime">
-                      <p className="gc-label">You are {auth.name}</p>
-                      <div className="mt-1 flex items-center justify-between gap-3">
-                        <p className="gc-username">{username}</p>
-                        <button
-                          className="gc-btn gc-btn--sm"
-                          onClick={handleCopyUsername}
-                        >
-                          <IconCopy size={14} stroke={ICON_STROKE} />
-                          Copy
-                        </button>
-                      </div>
+                      {editing ? (
+                        <>
+                          <input
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            maxLength={20}
+                            placeholder="your name"
+                            className="gc-input mb-2"
+                          />
+                          <input
+                            value={editUsername}
+                            onChange={(e) => setEditUsername(normalizeUsername(e.target.value))}
+                            maxLength={16}
+                            placeholder="username"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            className="gc-input"
+                          />
+                          <div className="mt-3 flex gap-2">
+                            <button
+                              className="gc-btn gc-btn--ink flex-1"
+                              disabled={
+                                !isValidUsername(normalizeUsername(editUsername)) ||
+                                editName.trim().length < 2
+                              }
+                              onClick={handleSaveProfile}
+                            >
+                              Save
+                            </button>
+                            <button className="gc-btn gc-btn--sm" onClick={() => setEditing(false)}>
+                              Cancel
+                            </button>
+                          </div>
+                          {editError && <p className="gc-error">{editError}</p>}
+                        </>
+                      ) : (
+                        <>
+                          <p className="gc-label">You are {auth.name}</p>
+                          <div className="mt-1 flex items-center justify-between gap-3">
+                            <p className="gc-username">{username}</p>
+                            <div className="flex gap-2">
+                              <button className="gc-btn gc-btn--sm" onClick={startEditing}>
+                                Edit
+                              </button>
+                              <button className="gc-btn gc-btn--sm" onClick={handleCopyUsername}>
+                                <IconCopy size={14} stroke={ICON_STROKE} />
+                                Copy
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
                       {presence.claimStatus === "taken" && (
                         <p className="gc-error">
                           You are already online in another tab. Invites reach that one.

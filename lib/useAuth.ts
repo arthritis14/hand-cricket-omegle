@@ -80,11 +80,33 @@ export function useAuth() {
     [session]
   );
 
+  // Changing either one is allowed as long as nobody else already holds the
+  // new value - the same unique rules as creating a profile decide that.
+  const updateProfile = useCallback(
+    async (nextUsername: string, nextName: string): Promise<ClaimResult> => {
+      const userId = session?.user.id;
+      if (!userId) return "error";
+      const { error } = await supabase
+        .from("hc_profiles")
+        .update({ username: nextUsername, name: nextName.trim() })
+        .eq("id", userId);
+      if (error) {
+        if (error.code !== "23505") return "error";
+        return error.message.includes("hc_profiles_name_key") ? "name-taken" : "username-taken";
+      }
+      setUsername(nextUsername);
+      setName(nextName.trim());
+      return "ok";
+    },
+    [session]
+  );
+
   return {
     status,
     userId: session?.user.id ?? null,
     username,
     name,
     claimUsername,
+    updateProfile,
   };
 }
