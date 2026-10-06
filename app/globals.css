@@ -1207,21 +1207,6 @@ select {
   color: var(--gc-ink);
 }
 
-/* Sticker: a crooked yellow tag. */
-.gc-home .nb-sticker {
-  display: inline-block;
-  padding: 6px 12px;
-  background: var(--gc-yellow);
-  border: 3px solid var(--gc-ink);
-  box-shadow: 4px 4px 0 0 var(--gc-ink);
-  font-family: var(--font-num);
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transform: rotate(-2.5deg);
-}
-
 /* Title: three stacked label blocks, each a different colour and tilt. */
 .gc-home .nb-title {
   display: flex;

@@ -631,8 +631,6 @@ export default function HomePage() {
           <div className="gc-center">
             <div className="gc-hero">
               <div className="gc-stagger flex flex-col items-start gap-5">
-                <span className="nb-sticker">1 v 1 / camera on / no sign up</span>
-
                 <h1 className="nb-title">
                   <span className="nb-title-line">Hand</span>
                   <span className="nb-title-line">Cricket</span>
