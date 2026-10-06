@@ -25,15 +25,15 @@
 
 :root {
   /* Sampled from the cricket illustrations. */
-  --gc-lime: #7dffb2;
-  --gc-red: #8b6cff;
+  --gc-lime: #9be86b;
+  --gc-red: #ff8a3d;
   --gc-blue: #2f6bff;
-  --gc-yellow: #35e0d0;
-  --gc-cream: #cfd8ff;
-  --gc-paper: #eaeeff;
-  --gc-ink: #0d0b1f;
+  --gc-yellow: #ffc84a;
+  --gc-cream: #ffe9c7;
+  --gc-paper: #fff6e5;
+  --gc-ink: #1c1208;
   /* Only for defeat and errors - everything else stays cool. */
-  --gc-loss: #ff3b57;
+  --gc-loss: #e11d48;
 
   --background: var(--gc-cream);
   --foreground: var(--gc-ink);
@@ -351,7 +351,7 @@ select {
 .gc-btn:disabled {
   cursor: not-allowed;
   transform: none;
-  background: #b4bfe8;
+  background: #e3cfa6;
   color: rgba(10, 10, 10, 0.5);
   box-shadow: var(--gc-shadow);
 }
@@ -1172,7 +1172,7 @@ select {
 
 
 /* ======================================================================
-   Home screen: a floodlit stadium, out of focus, behind everything.
+   Home screen: a sunny stadium, out of focus, behind everything.
    Scoped to .gc-home so the in-match screens keep their own look.
    ====================================================================== */
 .gc-stadium {
@@ -1180,32 +1180,29 @@ select {
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: linear-gradient(180deg, #050c20 0%, #09142e 40%, #0a1830 70%, #060d1d 100%);
+  background: linear-gradient(180deg, #59b8ff 0%, #bfe6ff 45%, #ffe3b0 100%);
 }
-/* A real night-match photo, softly out of focus. Only the top of it shows
-   (floodlights and packed stands); the lower part fades into the navy. */
+/* A drawn daytime ground, softly out of focus. */
 .gc-stadium::before {
   content: "";
   position: absolute;
   top: -24px;
   left: -24px;
   right: -24px;
-  height: min(82vh, 62vw + 160px);
-  min-height: 460px;
-  background: url("/stadium-night.jpg") center top / cover no-repeat;
-  filter: blur(6px) saturate(1.12) brightness(0.9);
-  -webkit-mask-image: linear-gradient(180deg, #000 50%, transparent 86%);
-  mask-image: linear-gradient(180deg, #000 50%, transparent 86%);
-  animation: gc-lights-on 1600ms var(--gc-ease-out) both;
+  height: min(88vh, 66vw + 160px);
+  min-height: 480px;
+  background: url("/stadium-day.svg") center top / cover no-repeat;
+  filter: blur(5px) saturate(1.1);
+  animation: gc-lights-on 1200ms var(--gc-ease-out) both;
 }
-/* Keeps the type on the left readable and the edges settled. */
+/* A warm sunlit veil keeps the type on the left readable. */
 .gc-stadium::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(3, 8, 22, 0.6) 0%, rgba(3, 8, 22, 0.12) 55%, rgba(3, 8, 22, 0.3) 100%),
-    radial-gradient(ellipse at 50% 45%, transparent 50%, rgba(2, 6, 18, 0.5) 100%);
+    linear-gradient(90deg, rgba(255, 243, 222, 0.62) 0%, rgba(255, 243, 222, 0.12) 55%, rgba(255, 243, 222, 0.0) 100%),
+    linear-gradient(180deg, transparent 70%, rgba(255, 227, 176, 0.7) 100%);
 }
 @keyframes gc-lights-on {
   0% { opacity: 0; }
@@ -1215,54 +1212,57 @@ select {
 .gc-home {
   position: relative;
   z-index: 1;
-  color: #e8ecff;
+  color: var(--gc-ink);
 }
-.gc-home .gc-display { color: #e8ecff; }
-.gc-home .gc-accent { color: #35e0d0; }
-.gc-home .gc-lede { color: rgba(232, 236, 255, 0.82); }
-.gc-home .gc-credit { color: rgba(232, 236, 255, 0.4); }
+/* Chunky ink offset keeps white type legible on any sky. */
+.gc-home .gc-display {
+  color: #fffaf0;
+  text-shadow: 4px 4px 0 var(--gc-ink);
+}
+.gc-home .gc-accent { color: #ff8a3d; }
+.gc-home .gc-lede { color: var(--gc-ink); font-weight: 600; }
+.gc-home .gc-credit { color: rgba(28, 18, 8, 0.6); }
 
 .gc-home .gc-badge {
-  background: #6a45e8;
-  color: #e8ecff;
-  border: 2px solid rgba(232, 236, 255, 0.9);
+  background: var(--gc-yellow);
+  color: var(--gc-ink);
+  border: 3px solid var(--gc-ink);
   border-radius: 999px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 3px 3px 0 0 var(--gc-ink);
 }
 
-/* Buttons: a cream frame around a muted colour, lifted by a soft shadow. */
+/* Buttons: flat colour, ink outline, hard offset shadow that the press
+   moves into. */
 .gc-home .gc-btn {
-  border: 4px solid #e8ecff;
-  border-radius: 6px;
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
-  color: #0d0b1f;
+  border: 4px solid var(--gc-ink);
+  border-radius: 0;
+  box-shadow: 6px 6px 0 0 var(--gc-ink);
+  color: var(--gc-ink);
   transition:
-    transform 500ms cubic-bezier(0.32, 0.72, 0, 1),
-    box-shadow 500ms cubic-bezier(0.32, 0.72, 0, 1),
-    filter 500ms cubic-bezier(0.32, 0.72, 0, 1);
+    transform 160ms var(--gc-ease-out),
+    box-shadow 160ms var(--gc-ease-out);
 }
-.gc-home .gc-btn--red { background: #8b6cff; color: #0d0b1f; }
-.gc-home .gc-btn--yellow { background: #35e0d0; }
-.gc-home .gc-btn:not(.gc-btn--red):not(.gc-btn--yellow) { background: #e8ecff; }
+.gc-home .gc-btn--red { background: #ff8a3d; }
+.gc-home .gc-btn--yellow { background: #ffc84a; }
+.gc-home .gc-btn:not(.gc-btn--red):not(.gc-btn--yellow) { background: #fff6e5; }
 @media (hover: hover) {
   .gc-home .gc-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 18px 32px rgba(0, 0, 0, 0.5);
-    filter: brightness(1.05);
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0 0 var(--gc-ink);
   }
 }
 .gc-home .gc-btn:active {
-  transform: scale(0.985);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  transform: translate(4px, 4px);
+  box-shadow: 2px 2px 0 0 var(--gc-ink);
 }
 
-/* The hands sit in a glass tray: a faint outer shell, a darker inner core. */
+/* The hands sit in a framed daytime scoreboard window. */
 .gc-home .gc-hh {
-  border: 1px solid rgba(232, 236, 255, 0.16);
-  border-radius: 30px;
+  border: 4px solid var(--gc-ink);
+  border-radius: 0;
   padding: 10px;
-  background: rgba(232, 236, 255, 0.05);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+  background: #fff6e5;
+  box-shadow: 8px 8px 0 0 var(--gc-ink);
 }
 .gc-home .gc-hh::before { content: none; }
 .gc-home .gc-hh::after {
@@ -1270,55 +1270,54 @@ select {
   position: absolute;
   inset: 8px;
   z-index: -1;
-  border-radius: 22px;
   pointer-events: none;
+  border: 3px solid var(--gc-ink);
   background:
-    radial-gradient(ellipse 80% 55% at 50% 110%, rgba(110, 160, 215, 0.2), transparent 70%),
-    linear-gradient(180deg, rgba(7, 14, 36, 0.55), rgba(7, 14, 36, 0.75));
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.14);
+    radial-gradient(ellipse 80% 40% at 50% 112%, #62c24d 0%, #3f9d3c 60%, transparent 100%),
+    linear-gradient(180deg, #6ec1ff 0%, #bfe6ff 62%, #ffe3b0 100%);
 }
 .gc-home .gc-hh-top { padding: 4px 6px 0; }
 .gc-home .gc-hh-pill {
-  background: rgba(232, 236, 255, 0.1);
-  color: #e8ecff;
-  border: 1px solid rgba(232, 236, 255, 0.3);
+  background: #fff6e5;
+  color: var(--gc-ink);
+  border: 2px solid var(--gc-ink);
   border-radius: 999px;
 }
 .gc-home .gc-hh-score,
 .gc-home .gc-hh-tag {
-  border: 2px solid #e8ecff;
-  border-radius: 12px;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
-  color: #0d0b1f;
+  border: 3px solid var(--gc-ink);
+  border-radius: 0;
+  box-shadow: 3px 3px 0 0 var(--gc-ink);
+  color: var(--gc-ink);
 }
-.gc-home .gc-hh-score { background: #e8ecff; }
-.gc-home .gc-hh-score.is-out { background: #8b6cff; color: #0d0b1f; }
-.gc-home .gc-hh-tag--you { background: #35e0d0; }
-.gc-home .gc-hh-tag--them { background: #e8ecff; }
+.gc-home .gc-hh-score { background: #fff6e5; }
+.gc-home .gc-hh-score.is-out { background: var(--gc-loss); color: #fff6e5; }
+.gc-home .gc-hh-tag--you { background: #ffc84a; }
+.gc-home .gc-hh-tag--them { background: #fff6e5; }
 .gc-home .gc-hh-vs {
-  background: rgba(232, 236, 255, 0.1);
-  color: #35e0d0;
-  border: 1px solid rgba(232, 236, 255, 0.25);
+  background: #fff6e5;
+  color: var(--gc-ink);
+  border: 2px solid var(--gc-ink);
   border-radius: 999px;
   padding: 8px 10px;
 }
 .gc-home .gc-hh-sticker {
-  border: 3px solid #e8ecff;
-  border-radius: 12px;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
-  color: #0d0b1f;
+  border: 3px solid var(--gc-ink);
+  border-radius: 0;
+  box-shadow: 4px 4px 0 0 var(--gc-ink);
+  color: var(--gc-ink);
 }
-.gc-home .gc-hh-sticker.is-out { background: #8b6cff; color: #0d0b1f; }
-.gc-home .gc-hh-sticker.is-runs { background: #35e0d0; }
-.gc-home .gc-hh-sticker.is-six { background: #2f6bff; color: #0d0b1f; }
+.gc-home .gc-hh-sticker.is-out { background: var(--gc-loss); color: #fff6e5; }
+.gc-home .gc-hh-sticker.is-runs { background: #ffc84a; }
+.gc-home .gc-hh-sticker.is-six { background: #2f6bff; color: #fff6e5; }
 
-/* Ticker: a quiet glass strip, not a black bar. */
+/* Ticker: an ink strip with warm type. */
 .gc-home .gc-ticker {
   border: 0;
-  border-top: 1px solid rgba(232, 236, 255, 0.14);
-  background: rgba(4, 9, 24, 0.82);
+  border-top: 4px solid var(--gc-ink);
+  background: var(--gc-ink);
 }
-.gc-home .gc-ticker span { color: #35e0d0; font-size: 13px; }
+.gc-home .gc-ticker span { color: #ffc84a; font-size: 13px; }
 
 .gc-home .gc-hh-side { width: 46%; max-width: 210px; }
 .gc-home .gc-hh-stage { gap: 0; padding-bottom: 4px; }
