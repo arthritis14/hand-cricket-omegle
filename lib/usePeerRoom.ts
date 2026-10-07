@@ -165,6 +165,20 @@ export function usePeerRoom({ onMessage, enabled, strategy, roomId }: UsePeerRoo
   }, []);
 
   useEffect(() => {
+    // Every time this room is switched on or off, drop whatever the last
+    // match left behind. Without this a finished (or failed) match kept its
+    // old status and error, so the next match opened straight onto a stale
+    // "Rain stopped play" before it had even tried to connect.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setStatus("idle");
+    setRole(null);
+    setError(null);
+    setLocalStream(null);
+    setRemoteStream(null);
+    setRtt(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
+    rttSamplesRef.current = [];
+
     if (!enabled) return;
 
     let cancelled = false;
