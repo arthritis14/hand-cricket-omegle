@@ -23,6 +23,7 @@ export type Phase =
   | "throw-capture" // capturing + locking in each player's number
   | "toss-result" // showing who won the toss
   | "choose-side" // toss winner is choosing to bat or bowl
+  | "side-chosen" // announcing who chose what, before the first ball
   | "ball-result" // showing the outcome of the last ball
   | "innings-break"
   | "game-over";
@@ -95,7 +96,7 @@ export function applySideChoice(state: GameState, choice: Side): GameState {
   return {
     ...state,
     battingFirst: resolveSideChoice(state.tossWinner, choice),
-    phase: "throw-ready",
+    phase: "side-chosen",
     throwKind: "ball",
     // The toss itself was seq 0 - the first ball needs its own seq (like
     // every ball after it gets via nextBall/startSecondInnings), or the

@@ -48,6 +48,8 @@ interface OutgoingInvite {
 interface AcceptedMatch {
   roomCode: string;
   role: "host" | "guest";
+  /** The other player's username, so the result can be saved against them. */
+  opponent: string;
 }
 
 interface UsePresenceHubArgs {
@@ -259,7 +261,7 @@ export function usePresenceHub({ enabled, username, friends }: UsePresenceHubArg
         const msg = data as PresenceMessage;
         if (msg.type === "invite-accepted") {
           setOutgoingInvite(null);
-          setAccepted({ roomCode, role: "host" });
+          setAccepted({ roomCode, role: "host", opponent: toUsername });
         } else if (msg.type === "invite-declined") {
           setOutgoingInvite((s) => (s ? { ...s, status: "declined" } : s));
         }
@@ -286,7 +288,11 @@ export function usePresenceHub({ enabled, username, friends }: UsePresenceHubArg
     if (!incomingInvite) return;
     incomingConnRef.current?.send({ type: "invite-accepted" });
     setTimeout(() => incomingConnRef.current?.close(), 200);
-    setAccepted({ roomCode: incomingInvite.roomCode, role: "guest" });
+    setAccepted({
+      roomCode: incomingInvite.roomCode,
+      role: "guest",
+      opponent: incomingInvite.fromUsername,
+    });
     setIncomingInvite(null);
   }, [incomingInvite]);
 

@@ -23,7 +23,15 @@ import { useHandDetector } from "@/lib/handDetector";
 import { computerThrow, computerSideChoice } from "@/lib/computerOpponent";
 import { roomIdFromCode } from "@/lib/roomCode";
 import { normalizeUsername, isValidUsername } from "@/lib/username";
-import { loadFriends, addFriend, removeFriend, type Friend } from "@/lib/friends";
+import {
+  loadFriends,
+  addFriend,
+  removeFriend,
+  loadRecords,
+  saveResult,
+  type Friend,
+  type WinLoss,
+} from "@/lib/friends";
 import { useAuth } from "@/lib/useAuth";
 import { usePresenceHub, type FriendStatus } from "@/lib/usePresenceHub";
 import type { GameMessage } from "@/lib/messages";
@@ -42,6 +50,9 @@ import {
 
 const COUNTDOWN_MS = 3000; // 3, 2, 1
 const RESULT_PAUSE_MS = 2400;
+// The toss is the one moment both players need to read, so it lingers.
+const TOSS_RESULT_PAUSE_MS = 3800;
+const SIDE_CHOSEN_PAUSE_MS = 4500;
 // How long the innings break waits for both players to press Continue.
 const BREAK_PAUSE_MS = 10000;
 const SELF_LABEL = "You";
@@ -105,6 +116,9 @@ export default function HomePage() {
   const auth = useAuth();
   const username = auth.username;
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [records, setRecords] = useState<Record<string, WinLoss>>({});
+  // Who the current friend match is against, for saving its result.
+  const [opponentUsername, setOpponentUsername] = useState<string | null>(null);
   const [usernameInput, setUsernameInput] = useState("");
   const [nameInput, setNameInput] = useState("");
   // What the person clicked on the home screen before being asked to create
@@ -127,6 +141,9 @@ export default function HomePage() {
     let cancelled = false;
     loadFriends(auth.userId).then((list) => {
       if (!cancelled) setFriends(list);
+    });
+    loadRecords(auth.userId).then((r) => {
+      if (!cancelled) setRecords(r);
     });
     return () => {
       cancelled = true;
@@ -202,6 +219,7 @@ export default function HomePage() {
     // "lobby -> toss-call" transition further down, not derived state.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRoomCode(presence.accepted.roomCode);
+    setOpponentUsername(presence.accepted.opponent);
     setMode(presence.accepted.role === "host" ? "private-host" : "private-guest");
     setStarted(true);
   }, [presence.accepted]);
@@ -297,6 +315,7 @@ export default function HomePage() {
 
   // Play again: both players press it at match over, and the next match
   // starts on the same connection once each side has.
+  const resultSavedRef = useRef(false);
   const [selfRematch, setSelfRematch] = useState(false);
   const [peerRematch, setPeerRematch] = useState(false);
 
@@ -315,6 +334,7 @@ export default function HomePage() {
     peerThrowRef.current = null;
     capturedForSeqRef.current = null;
     countdownSentForSeqRef.current = null;
+    resultSavedRef.current = false;
     recentReadingsRef.current = [];
   };
 
@@ -447,6 +467,22 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     resetMatch("toss-call");
   }, [game.phase, selfRematch, peerRematch, mode]);
+
+  // A finished friend match goes on the scorecard, once, from this player's
+  // side. Stranger and computer games are not kept.
+  useEffect(() => {
+    if (game.phase !== "game-over" || resultSavedRef.current) return;
+    if (mode !== "private-host" && mode !== "private-guest") return;
+    if (!auth.userId || !opponentUsername || !role) return;
+    resultSavedRef.current = true;
+    const userId = auth.userId;
+    const result = game.winner === "tie" ? "tie" : game.winner === role ? "win" : "loss";
+    const mine = game.innings[role].runs;
+    const theirs = game.innings[other(role)].runs;
+    saveResult(userId, opponentUsername, result, mine, theirs).then((ok) => {
+      if (ok) loadRecords(userId).then(setRecords);
+    });
+  }, [game.phase, game.winner, game.innings, mode, auth.userId, opponentUsername, role]);
 
   const handlePlayAgain = () => {
     setSelfRematch(true);
@@ -590,7 +626,14 @@ export default function HomePage() {
     if (game.phase === "toss-result") {
       const t = setTimeout(
         () => setGame((s) => ({ ...s, phase: "choose-side" })),
-        RESULT_PAUSE_MS
+        TOSS_RESULT_PAUSE_MS
+      );
+      return () => clearTimeout(t);
+    }
+    if (game.phase === "side-chosen") {
+      const t = setTimeout(
+        () => setGame((s) => (s.phase === "side-chosen" ? { ...s, phase: "throw-ready" } : s)),
+        SIDE_CHOSEN_PAUSE_MS
       );
       return () => clearTimeout(t);
     }
@@ -951,6 +994,7 @@ export default function HomePage() {
                             <FriendRow
                               key={friend.username}
                               friend={friend}
+                              record={records[friend.username]}
                               status={presence.statuses[friend.username] ?? "checking"}
                               outgoingStatus={
                                 presence.outgoingInvite?.toUsername === friend.username
@@ -1163,12 +1207,19 @@ export default function HomePage() {
               <p className="gc-phase-body">
                 You threw {game.ownValue}. They threw {game.peerValue}.
               </p>
+              <p className="gc-phase-body mt-1">
+                {game.tossWinner === role
+                  ? "You get to choose: bat or bowl."
+                  : `${PEER_LABEL} gets to choose: bat or bowl.`}
+              </p>
             </div>
           )}
 
           {game.phase === "choose-side" && (
             <div className="gc-phase gc-phase--lime">
-              <h2 className="gc-phase-head">Bat or bowl</h2>
+              <h2 className="gc-phase-head">
+                {game.tossWinner === role ? "Bat or bowl?" : `${PEER_LABEL} won the toss`}
+              </h2>
               {game.tossWinner === role ? (
                 <div className="gc-phase-row">
                   <button className="gc-btn gc-btn--red" onClick={() => handleChooseSide("bat")}>
@@ -1179,8 +1230,31 @@ export default function HomePage() {
                   </button>
                 </div>
               ) : (
-                <p className="gc-phase-body">{PEER_LABEL} is choosing.</p>
+                <p className="gc-phase-body">
+                  They are choosing whether to bat or bowl first. Hold on.
+                </p>
               )}
+            </div>
+          )}
+
+          {game.phase === "side-chosen" && game.tossWinner && game.battingFirst && (
+            <div className="gc-phase gc-phase--yellow">
+              <h2 className="gc-phase-head">
+                {game.tossWinner === role
+                  ? `You chose to ${game.tossWinner === game.battingFirst ? "bat" : "bowl"}`
+                  : `${PEER_LABEL} chose to ${game.tossWinner === game.battingFirst ? "bat" : "bowl"}`}
+              </h2>
+              <p className="gc-break-score">
+                {game.battingFirst === role ? "You bat first" : "You bowl first"}
+              </p>
+              <p className="gc-phase-body">
+                {game.tossWinner === role
+                  ? "You won the toss. "
+                  : `${PEER_LABEL} won the toss. `}
+                {game.battingFirst === role
+                  ? "Get ready to bat: you throw, they try to match your number."
+                  : "Get ready to bowl: match their number to get them out."}
+              </p>
             </div>
           )}
 
@@ -1208,6 +1282,7 @@ export default function HomePage() {
               selfRuns={role ? game.innings[role].runs : 0}
               peerRuns={opponentRole ? game.innings[opponentRole].runs : 0}
               peerName={PEER_LABEL}
+              record={opponentUsername && (mode === "private-host" || mode === "private-guest") ? records[opponentUsername] : undefined}
               selfWantsAgain={selfRematch}
               peerWantsAgain={peerRematch}
               onPlayAgain={handlePlayAgain}
@@ -1310,6 +1385,7 @@ function GameOverPanel({
   selfRuns,
   peerRuns,
   peerName,
+  record,
   selfWantsAgain,
   peerWantsAgain,
   onPlayAgain,
@@ -1320,6 +1396,7 @@ function GameOverPanel({
   selfRuns: number;
   peerRuns: number;
   peerName: string;
+  record?: WinLoss;
   selfWantsAgain: boolean;
   peerWantsAgain: boolean;
   onPlayAgain: () => void;
@@ -1362,6 +1439,12 @@ function GameOverPanel({
             ? `You beat ${peerName} ${selfRuns} to ${peerRuns}.`
             : `${peerName} took it ${peerRuns} to ${selfRuns}.`}
       </p>
+      {record && (
+        <p className="gc-label mt-3">
+          Your record vs {peerName}: {record.wins} won, {record.losses} lost
+          {record.ties > 0 ? `, ${record.ties} tied` : ""}
+        </p>
+      )}
       <button
         className="gc-btn gc-btn--ink mt-4 w-full"
         onClick={onPlayAgain}
@@ -1433,6 +1516,7 @@ function HandStatusBadge({ count }: { count: number | null }) {
  *  whichever action makes sense right now. */
 function FriendRow({
   friend,
+  record,
   status,
   outgoingStatus,
   onInvite,
@@ -1440,6 +1524,7 @@ function FriendRow({
   onRemove,
 }: {
   friend: Friend;
+  record?: WinLoss;
   status: FriendStatus;
   outgoingStatus: "waiting" | "declined" | "failed" | null;
   onInvite: () => void;
@@ -1453,6 +1538,11 @@ function FriendRow({
         <div className="min-w-0">
           <p className="gc-row-name">{friend.nickname}</p>
           <p className="gc-row-sub">{friend.username}</p>
+          <p className="gc-label mt-1">
+            {record
+              ? `Won ${record.wins} / Lost ${record.losses}${record.ties > 0 ? ` / Tied ${record.ties}` : ""}`
+              : "Not played yet"}
+          </p>
           {outgoingStatus === "failed" && (
             <p className="gc-error">Could not reach them</p>
           )}

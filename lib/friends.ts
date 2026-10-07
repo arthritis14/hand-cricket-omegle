@@ -62,3 +62,57 @@ export async function removeFriend(userId: string, username: string): Promise<vo
     .eq("user_id", userId)
     .eq("friend_id", profile.id);
 }
+
+/** Wins, losses and ties against one opponent, from this player's side. */
+export interface WinLoss {
+  wins: number;
+  losses: number;
+  ties: number;
+}
+
+/** The player's record against every opponent they have finished a friend
+ *  match with, keyed by the opponent's username. */
+export async function loadRecords(userId: string): Promise<Record<string, WinLoss>> {
+  const { data, error } = await supabase
+    .from("hc_results")
+    .select("result, opponent:hc_profiles!hc_results_opponent_id_fkey(username)")
+    .eq("user_id", userId);
+  if (error || !data) {
+    console.warn("Could not load records", error);
+    return {};
+  }
+  const records: Record<string, WinLoss> = {};
+  for (const row of data) {
+    const opponent = Array.isArray(row.opponent) ? row.opponent[0] : row.opponent;
+    if (!opponent) continue;
+    const entry = (records[opponent.username] ??= { wins: 0, losses: 0, ties: 0 });
+    if (row.result === "win") entry.wins += 1;
+    else if (row.result === "loss") entry.losses += 1;
+    else entry.ties += 1;
+  }
+  return records;
+}
+
+/** Saves one finished match from this player's side. Returns whether it stuck. */
+export async function saveResult(
+  userId: string,
+  opponentUsername: string,
+  result: "win" | "loss" | "tie",
+  myRuns: number,
+  theirRuns: number
+): Promise<boolean> {
+  const { data: profile } = await supabase
+    .from("hc_profiles")
+    .select("id")
+    .eq("username", opponentUsername)
+    .maybeSingle();
+  if (!profile) return false;
+  const { error } = await supabase.from("hc_results").insert({
+    user_id: userId,
+    opponent_id: profile.id,
+    result,
+    my_runs: myRuns,
+    their_runs: theirRuns,
+  });
+  return !error;
+}
