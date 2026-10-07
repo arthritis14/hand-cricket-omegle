@@ -172,6 +172,34 @@ select {
   border-right: var(--gc-b-lg) solid var(--gc-ink);
 }
 
+/* Stumps standing on each popping crease: three stumps and a bail line. */
+.gc-stumps {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  height: 62px;
+}
+.gc-stumps b {
+  display: block;
+  width: 10px;
+  height: 100%;
+  background: #FFF3C4;
+  border: 3px solid var(--gc-ink);
+}
+.gc-stumps::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: -5px;
+  height: 6px;
+  background: var(--gc-ink);
+}
+.gc-stumps--top { top: calc(10% - 58px); }
+.gc-stumps--bottom { top: calc(90% - 58px); }
+
 /* ---- Surfaces --------------------------------------------------- */
 .gc-card {
   position: relative;
@@ -1197,8 +1225,8 @@ select {
   height: max(42vw, 520px);
   min-height: 520px;
   background: url("/stadium-day.svg") center top / cover no-repeat;
-  -webkit-mask-image: linear-gradient(180deg, #000 62%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 62%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 84%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 84%, transparent 100%);
   animation: gc-lights-on 1000ms var(--gc-ease-out) both;
 }
 @keyframes gc-lights-on {

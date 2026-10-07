@@ -1025,7 +1025,10 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="gc-pitch" />
+      <div className="gc-pitch">
+        <div className="gc-stumps gc-stumps--top" aria-hidden="true"><b /><b /><b /></div>
+        <div className="gc-stumps gc-stumps--bottom" aria-hidden="true"><b /><b /><b /></div>
+      </div>
       {game.phase !== "game-over" && <BackButton onClick={leaveToMenu} />}
       <main className="gc-screen-wrap mx-auto w-full max-w-2xl gap-4">
         <div className="flex items-center justify-between gap-3">

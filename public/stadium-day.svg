@@ -5,9 +5,9 @@
       <stop offset="1" stop-color="#E4F2FF"/>
     </linearGradient>
     <pattern id="crowdPink" width="18" height="14" patternUnits="userSpaceOnUse">
-      <rect width="18" height="14" fill="#FF6FB5"/>
+      <rect width="18" height="14" fill="#FFD60A"/>
       <circle cx="4" cy="4" r="3" fill="#fff"/><circle cx="13" cy="5" r="3" fill="#6FA8FF"/>
-      <circle cx="9" cy="11" r="3" fill="#FFD60A"/><circle cx="1" cy="12" r="2" fill="#000"/>
+      <circle cx="9" cy="11" r="3" fill="#FF6FB5"/><circle cx="1" cy="12" r="2" fill="#000"/>
     </pattern>
     <pattern id="crowdBlue" width="18" height="14" patternUnits="userSpaceOnUse">
       <rect width="18" height="14" fill="#6FA8FF"/>
@@ -46,8 +46,19 @@
     <!-- outfield, drawn first so the stands sit on it -->
     <rect x="0" y="440" width="1600" height="200" fill="#9BE564"/>
     <g stroke="none" fill="#86D656"><rect x="0" y="520" width="1600" height="30"/><rect x="0" y="590" width="1600" height="30"/></g>
-    <path d="M610 640 L690 520 H910 L990 640 Z" fill="#F7F1E3" stroke-width="4"/>
-    <path d="M700 548 H900 M650 612 H950" stroke-width="3"/>
+    <path d="M650 640 L720 482 H880 L950 640 Z" fill="#E2BE82" stroke-width="4"/>
+    <path d="M716 492 L884 492 M664 600 L936 600" stroke-width="4" fill="none"/>
+    <path d="M700 530 L900 530 M682 566 L918 566" stroke="#C9A064" stroke-width="10" fill="none"/>
+    <!-- far stumps -->
+    <g fill="#FFF3C4" stroke-width="3">
+      <rect x="786" y="460" width="7" height="32"/><rect x="797" y="460" width="7" height="32"/><rect x="808" y="460" width="7" height="32"/>
+    </g>
+    <path d="M785 459 H816" stroke-width="4" fill="none"/>
+    <!-- near stumps -->
+    <g fill="#FFF3C4" stroke-width="4">
+      <rect x="772" y="552" width="12" height="52"/><rect x="794" y="552" width="12" height="52"/><rect x="816" y="552" width="12" height="52"/>
+    </g>
+    <path d="M770 550 H830" stroke-width="5" fill="none"/>
 
     <!-- upper stand roof and seating -->
     <path d="M-10 292 Q800 232 1610 292 L1610 318 Q800 258 -10 318 Z" fill="#fff"/>
