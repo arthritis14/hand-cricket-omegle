@@ -1456,3 +1456,27 @@ select {
   .gc-over, .gc-over--win h1 { animation: none; }
   .gc-confetti { display: none; }
 }
+
+/* Winner: confetti over the whole screen and a pulsing frame. */
+.gc-celebrate {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+.gc-celebrate .gc-confetti { position: absolute; inset: 0; }
+.gc-celebrate .gc-confetti i { width: 12px; height: 18px; }
+.gc-celebrate-frame {
+  position: absolute;
+  inset: 0;
+  border: 12px solid var(--gc-lime);
+  box-shadow: inset 0 0 0 4px var(--gc-ink);
+  animation: gc-frame-pulse 900ms ease-in-out infinite alternate;
+}
+@keyframes gc-frame-pulse {
+  from { border-color: var(--gc-lime); }
+  to { border-color: var(--gc-yellow); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gc-celebrate-frame { animation: none; }
+}

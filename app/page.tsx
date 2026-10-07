@@ -295,6 +295,29 @@ export default function HomePage() {
   const ownThrowRef = useRef<number | null>(null);
   const peerThrowRef = useRef<{ seq: number; value: number } | null>(null);
 
+  // Play again: both players press it at match over, and the next match
+  // starts on the same connection once each side has.
+  const [selfRematch, setSelfRematch] = useState(false);
+  const [peerRematch, setPeerRematch] = useState(false);
+
+  // Wipes everything left over from the last match, so the next one starts
+  // from the toss instead of resuming a finished game (which is what showed
+  // a stale "You lost" when the same friend was invited again).
+  const resetMatch = (firstPhase: "lobby" | "toss-call") => {
+    setGame({ ...createInitialState(), phase: firstPhase });
+    setPeerReadySeq(null);
+    setSelfContinuedSeq(null);
+    setPeerContinuedSeq(null);
+    setComputerLastThrow(null);
+    setSelfRematch(false);
+    setPeerRematch(false);
+    ownThrowRef.current = null;
+    peerThrowRef.current = null;
+    capturedForSeqRef.current = null;
+    countdownSentForSeqRef.current = null;
+    recentReadingsRef.current = [];
+  };
+
   // handleMessage is passed into usePeerRoom, which is what actually
   // determines `role` - so `role` isn't available yet at the point
   // handleMessage is defined. We bridge that with a ref kept in sync via
@@ -313,6 +336,9 @@ export default function HomePage() {
         break;
       case "continue":
         setPeerContinuedSeq(msg.seq);
+        break;
+      case "rematch":
+        setPeerRematch(true);
         break;
       case "start-countdown": {
         // leadMs is "how long from now", so the two devices' clocks never
@@ -406,6 +432,26 @@ export default function HomePage() {
     rafId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafId);
   }, [detectorReady, detect]);
+
+  // Not in a match (menu, or just left one): leave a clean slate for the next.
+  useEffect(() => {
+    if (started) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    resetMatch("lobby");
+  }, [started]);
+
+  // Both players asked for another match: back to the toss on the same call.
+  useEffect(() => {
+    if (game.phase !== "game-over" || !selfRematch) return;
+    if (mode !== "computer" && !peerRematch) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    resetMatch("toss-call");
+  }, [game.phase, selfRematch, peerRematch, mode]);
+
+  const handlePlayAgain = () => {
+    setSelfRematch(true);
+    sendMessage({ type: "rematch" });
+  };
 
   // Kick the game off (lobby -> toss-call) once we're ready to play -
   // either the data channel is up (a real peer), or the camera's ready
@@ -1162,6 +1208,9 @@ export default function HomePage() {
               selfRuns={role ? game.innings[role].runs : 0}
               peerRuns={opponentRole ? game.innings[opponentRole].runs : 0}
               peerName={PEER_LABEL}
+              selfWantsAgain={selfRematch}
+              peerWantsAgain={peerRematch}
+              onPlayAgain={handlePlayAgain}
               onBack={leaveToMenu}
             />
           )}
@@ -1244,7 +1293,7 @@ function InningsBreakPanel({
   );
 }
 
-const CONFETTI = Array.from({ length: 28 }, (_, i) => ({
+const CONFETTI = Array.from({ length: 70 }, (_, i) => ({
   left: (i * 37) % 100,
   delay: ((i * 53) % 20) / 10,
   duration: 2.4 + ((i * 29) % 15) / 10,
@@ -1261,6 +1310,9 @@ function GameOverPanel({
   selfRuns,
   peerRuns,
   peerName,
+  selfWantsAgain,
+  peerWantsAgain,
+  onPlayAgain,
   onBack,
 }: {
   winner: Role | "tie" | null;
@@ -1268,6 +1320,9 @@ function GameOverPanel({
   selfRuns: number;
   peerRuns: number;
   peerName: string;
+  selfWantsAgain: boolean;
+  peerWantsAgain: boolean;
+  onPlayAgain: () => void;
   onBack: () => void;
 }) {
   const tie = winner === "tie";
@@ -1276,7 +1331,9 @@ function GameOverPanel({
   return (
     <div className={`gc-over ${tone}`}>
       {won && (
-        <div className="gc-confetti" aria-hidden="true">
+        <div className="gc-celebrate" aria-hidden="true">
+          <div className="gc-celebrate-frame" />
+          <div className="gc-confetti">
           {CONFETTI.map((c, i) => (
             <i
               key={i}
@@ -1289,6 +1346,7 @@ function GameOverPanel({
               }}
             />
           ))}
+          </div>
         </div>
       )}
       <span className="gc-badge">
@@ -1304,7 +1362,18 @@ function GameOverPanel({
             ? `You beat ${peerName} ${selfRuns} to ${peerRuns}.`
             : `${peerName} took it ${peerRuns} to ${selfRuns}.`}
       </p>
-      <button className="gc-btn gc-btn--ink mt-4 w-full" onClick={onBack}>
+      <button
+        className="gc-btn gc-btn--ink mt-4 w-full"
+        onClick={onPlayAgain}
+        disabled={selfWantsAgain}
+      >
+        {selfWantsAgain
+          ? `Waiting for ${peerName}`
+          : peerWantsAgain
+            ? `${peerName} wants another. Play again`
+            : "Play again"}
+      </button>
+      <button className="gc-btn mt-3 w-full" onClick={onBack}>
         <IconArrowLeft size={16} stroke={ICON_STROKE} />
         Back
       </button>
