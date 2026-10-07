@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 640" preserveAspectRatio="xMidYMin slice">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMin slice">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#8CC8FF"/>
@@ -16,7 +16,7 @@
     </pattern>
   </defs>
   <g stroke="#000" stroke-width="5" stroke-linejoin="round">
-    <rect width="1600" height="640" fill="url(#sky)" stroke="none"/>
+    <rect width="1600" height="900" fill="url(#sky)" stroke="none"/>
 
     <!-- clouds -->
     <g fill="#fff" stroke="none">
@@ -44,11 +44,17 @@
     <rect x="710" y="176" width="180" height="22" fill="#6FA8FF"/></g>
 
     <!-- outfield, drawn first so the stands sit on it -->
-    <rect x="0" y="440" width="1600" height="200" fill="#9BE564"/>
-    <g stroke="none" fill="#86D656"><rect x="0" y="520" width="1600" height="30"/><rect x="0" y="590" width="1600" height="30"/></g>
-    <path d="M650 640 L720 482 H880 L950 640 Z" fill="#E2BE82" stroke-width="4"/>
-    <path d="M716 492 L884 492 M664 600 L936 600" stroke-width="4" fill="none"/>
-    <path d="M700 530 L900 530 M682 566 L918 566" stroke="#C9A064" stroke-width="10" fill="none"/>
+    <rect x="0" y="440" width="1600" height="520" fill="#9BE564" stroke="none"/>
+    <g stroke="none" fill="#86D656">
+      <rect x="0" y="520" width="1600" height="30"/><rect x="0" y="592" width="1600" height="38"/>
+      <rect x="0" y="676" width="1600" height="48"/><rect x="0" y="778" width="1600" height="62"/>
+    </g>
+    <!-- the pitch: tan dirt narrowing away from us -->
+    <path d="M534 940 L720 482 H880 L1066 940 Z" fill="#E2BE82" stroke-width="4"/>
+    <g stroke="#C9A064" stroke-width="12" fill="none">
+      <path d="M690 540 L910 540 M670 590 L930 590 M646 650 L954 650 M620 722 L980 722 M588 810 L1012 810"/>
+    </g>
+    <path d="M716 492 L884 492 M596 760 L1004 760" stroke-width="4" fill="none"/>
     <!-- far stumps -->
     <g fill="#FFF3C4" stroke-width="3">
       <rect x="786" y="460" width="7" height="32"/><rect x="797" y="460" width="7" height="32"/><rect x="808" y="460" width="7" height="32"/>
@@ -56,9 +62,9 @@
     <path d="M785 459 H816" stroke-width="4" fill="none"/>
     <!-- near stumps -->
     <g fill="#FFF3C4" stroke-width="4">
-      <rect x="772" y="552" width="12" height="52"/><rect x="794" y="552" width="12" height="52"/><rect x="816" y="552" width="12" height="52"/>
+      <rect x="766" y="698" width="14" height="62"/><rect x="793" y="698" width="14" height="62"/><rect x="820" y="698" width="14" height="62"/>
     </g>
-    <path d="M770 550 H830" stroke-width="5" fill="none"/>
+    <path d="M762 695 H838" stroke-width="6" fill="none"/>
 
     <!-- upper stand roof and seating -->
     <path d="M-10 292 Q800 232 1610 292 L1610 318 Q800 258 -10 318 Z" fill="#fff"/>

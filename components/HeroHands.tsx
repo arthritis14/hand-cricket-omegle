@@ -64,7 +64,7 @@ function Hand({ n }: { n: number }) {
         </>
       )}
       {/* wristband */}
-      <rect x="30" y="184" width="104" height="24" rx="6" fill="var(--gc-red)" {...stroke} />
+      <rect x="30" y="184" width="104" height="24" rx="6" fill="var(--gc-blue)" {...stroke} />
     </svg>
   );
 }
