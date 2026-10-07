@@ -465,7 +465,9 @@ export default function HomePage() {
     }
   }, [game.phase, game.seq, mode, peerReadySeq, role, rtt, sendMessage]);
 
-  const [countdownLabel, setCountdownLabel] = useState("3");
+  // null until the shared start instant arrives, so the previous throw's
+  // "1" never lingers on screen while the next countdown is still waiting.
+  const [countdownLabel, setCountdownLabel] = useState<string | null>(null);
 
   // Drive the synced countdown, then capture a frame at the shared throw
   // instant.
@@ -484,7 +486,10 @@ export default function HomePage() {
       setGame((s) => (s.phase === "throw-countdown" ? { ...s, phase: "throw-capture" } : s));
     });
 
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      timers.forEach(clearTimeout);
+      setCountdownLabel(null);
+    };
   }, [game.phase, game.countdownStartsAt]);
 
   const lockInThrow = useCallback(
@@ -1021,6 +1026,7 @@ export default function HomePage() {
   return (
     <>
       <div className="gc-pitch" />
+      {game.phase !== "game-over" && <BackButton onClick={leaveToMenu} />}
       <main className="gc-screen-wrap mx-auto w-full max-w-2xl gap-4">
         <div className="flex items-center justify-between gap-3">
           <span className="gc-badge gc-badge--lime">
@@ -1043,7 +1049,7 @@ export default function HomePage() {
               tone="self"
               videoRef={localVideoRef}
             />
-            {game.phase === "throw-countdown" && <Countdown label={countdownLabel} />}
+            {game.phase === "throw-countdown" && countdownLabel && <Countdown label={countdownLabel} />}
             {detectorReady && <HandStatusBadge count={liveHandCount} />}
           </div>
           <VideoTile
@@ -1083,7 +1089,7 @@ export default function HomePage() {
           )}
 
           {(game.phase === "throw-ready" || game.phase === "throw-countdown") && (
-            <div className="gc-phase gc-phase--lime">
+            <div className="gc-phase gc-phase--yellow">
               <h2 className="gc-phase-head">
                 {game.throwKind === "toss" ? "Toss throw" : "Ball incoming"}
               </h2>
@@ -1130,7 +1136,7 @@ export default function HomePage() {
           )}
 
           {game.phase === "ball-result" && game.lastBall && (
-            <div className={`gc-phase ${game.lastBall.out ? "gc-phase--red" : "gc-phase--lime"}`}>
+            <div className={`gc-phase ${game.lastBall.out ? "gc-phase--red" : "gc-phase--yellow"}`}>
               <h2 className="gc-phase-head">{game.lastBall.out ? "Out" : "Runs"}</h2>
               <p className="gc-phase-body">
                 Batter {game.lastBall.batterValue}, bowler {game.lastBall.bowlerValue}.

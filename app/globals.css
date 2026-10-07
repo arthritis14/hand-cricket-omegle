@@ -154,6 +154,8 @@ select {
   overflow: hidden;
 }
 
+/* The strip itself: packed dirt with faint roller stripes, the popping
+   creases drawn near each end, and the stumps' line in the middle. */
 .gc-pitch::before {
   content: "";
   position: absolute;
@@ -162,9 +164,12 @@ select {
   left: 50%;
   width: min(560px, 82vw);
   transform: translateX(-50%);
-  background: var(--gc-cream);
-  border-left: var(--gc-b) solid var(--gc-ink);
-  border-right: var(--gc-b) solid var(--gc-ink);
+  background-color: #E2BE82;
+  background-image:
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0 36px, transparent 36px 72px),
+    linear-gradient(180deg, transparent 10%, rgba(0, 0, 0, 0.9) 10% calc(10% + 4px), transparent calc(10% + 4px) 90%, rgba(0, 0, 0, 0.9) 90% calc(90% + 4px), transparent calc(90% + 4px));
+  border-left: var(--gc-b-lg) solid var(--gc-ink);
+  border-right: var(--gc-b-lg) solid var(--gc-ink);
 }
 
 /* ---- Surfaces --------------------------------------------------- */
