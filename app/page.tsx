@@ -816,7 +816,7 @@ export default function HomePage() {
                       <input
                         value={nameInput}
                         onChange={(e) => setNameInput(e.target.value)}
-                        placeholder="Arth"
+                        placeholder="Virat Kohli"
                         maxLength={20}
                         className="gc-input mb-3"
                       />
@@ -824,7 +824,7 @@ export default function HomePage() {
                       <input
                         value={usernameInput}
                         onChange={(e) => setUsernameInput(normalizeUsername(e.target.value))}
-                        placeholder="yourname"
+                        placeholder="ViratKohliLover"
                         maxLength={16}
                         autoCapitalize="none"
                         autoCorrect="off"
