@@ -1480,3 +1480,6 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .gc-celebrate-frame { animation: none; }
 }
+
+/* TEMP-MIRROR: remove after recording */
+body { transform: scaleX(-1); }
