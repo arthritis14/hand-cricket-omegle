@@ -187,6 +187,8 @@ export function usePeerRoom({ onMessage, enabled, strategy, roomId }: UsePeerRoo
     let settledRole: Role | null = null;
     let pingTimer: ReturnType<typeof setInterval> | null = null;
     let connectTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
+    let activeCall: MediaConnection | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     const clearConnectTimeout = () => {
       if (connectTimeoutTimer) {
@@ -385,6 +387,8 @@ export function usePeerRoom({ onMessage, enabled, strategy, roomId }: UsePeerRoo
           onMessageRef.current(msg);
         });
         conn.on("open", () => {
+          // An attempt we've already abandoned (see becomeGuestOf's retry).
+          if (dataConnRef.current !== conn) return;
           clearConnectTimeout();
           setStatus("connected");
           conn.send({ type: "ping", ts: Date.now() });
@@ -393,13 +397,14 @@ export function usePeerRoom({ onMessage, enabled, strategy, roomId }: UsePeerRoo
           }, PING_INTERVAL_MS);
         });
         conn.on("close", () => {
+          if (dataConnRef.current !== conn) return;
           clearConnectTimeout();
           if (pingTimer) clearInterval(pingTimer);
           setStatus("opponent-left");
         });
         conn.on("error", (err) => {
           console.error("PeerJS data connection error", err);
-          if (cancelled) return;
+          if (cancelled || dataConnRef.current !== conn) return;
           clearConnectTimeout();
           setError(`Connection error: ${err.type}`);
           setStatus("failed");
@@ -407,6 +412,7 @@ export function usePeerRoom({ onMessage, enabled, strategy, roomId }: UsePeerRoo
       };
 
       const wireMediaConnection = (call: MediaConnection) => {
+        activeCall = call;
         // Tracks whether the "stream" event below has ever fired, so a
         // late ICE hiccup after a successful call doesn't get misread as
         // the call having failed outright.
@@ -443,7 +449,10 @@ export function usePeerRoom({ onMessage, enabled, strategy, roomId }: UsePeerRoo
           }
         });
 
-        call.on("close", () => setStatus("opponent-left"));
+        call.on("close", () => {
+          if (activeCall !== call) return;
+          setStatus("opponent-left");
+        });
         call.on("error", (err) => {
           console.error("PeerJS media connection error", err);
         });
@@ -471,20 +480,54 @@ export function usePeerRoom({ onMessage, enabled, strategy, roomId }: UsePeerRoo
         peerRef.current = guestPeer;
         wirePeerLifecycle(guestPeer, "guest");
 
-        guestPeer.on("open", () => {
-          if (cancelled || !localMediaStream) return;
-          setError(null);
-          setStatus("waiting-for-opponent");
+        // Joining a private room can start before the host has finished
+        // claiming the room's ID: the host only starts (camera permission,
+        // then the ID claim) once their invite is accepted, while the
+        // guest connects the instant they accept. That race used to end in
+        // "peer-unavailable" and a failed match - always for whichever
+        // player had sent the invite. So for private rooms the guest keeps
+        // knocking until the host turns up.
+        const MAX_JOIN_ATTEMPTS = 20;
+        const JOIN_RETRY_MS = 2000;
+        let joinAttempts = 0;
+
+        const connectToHost = () => {
+          if (cancelled || !localMediaStream || guestPeer.destroyed) return;
+          joinAttempts += 1;
+          const oldConn = dataConnRef.current;
+          const oldCall = activeCall;
           const conn = guestPeer.connect(targetId, { reliable: true });
           wireDataConnection(conn);
           const call = guestPeer.call(targetId, localMediaStream);
           wireMediaConnection(call);
+          // The attempts being replaced are wired to ignore their own
+          // close events now, so closing them is silent.
+          oldConn?.close();
+          oldCall?.close();
+        };
+
+        guestPeer.on("open", () => {
+          if (cancelled || !localMediaStream) return;
+          setError(null);
+          setStatus("waiting-for-opponent");
+          connectToHost();
         });
 
         guestPeer.on("error", (err) => {
           console.error("PeerJS error (guest)", err);
           if (cancelled) return;
           if (err.type === "peer-unavailable") {
+            if (strategy === "guest" && joinAttempts < MAX_JOIN_ATTEMPTS) {
+              // The data connection and the video call each report this,
+              // so only schedule one retry per round.
+              if (!retryTimer) {
+                retryTimer = setTimeout(() => {
+                  retryTimer = null;
+                  connectToHost();
+                }, JOIN_RETRY_MS);
+              }
+              return;
+            }
             setError(
               strategy === "guest"
                 ? "Couldn't find a room with that code. Double-check it with whoever sent it and try again."
@@ -562,6 +605,7 @@ export function usePeerRoom({ onMessage, enabled, strategy, roomId }: UsePeerRoo
       cancelled = true;
       if (pingTimer) clearInterval(pingTimer);
       clearConnectTimeout();
+      if (retryTimer) clearTimeout(retryTimer);
       localMediaStream?.getTracks().forEach((t) => t.stop());
       peer?.destroy();
       peerRef.current = null;

@@ -11,7 +11,6 @@ import {
   IconRobot,
   IconTrophy,
   IconUserPlus,
-  IconWorld,
   IconX,
 } from "@tabler/icons-react";
 import { VideoTile } from "@/components/VideoTile";
@@ -732,7 +731,7 @@ export default function HomePage() {
                 </h1>
 
                 <p className="nb-lede">
-                  Get matched with a stranger. Throw your hand at the camera.
+                  Challenge a friend. Throw your hand at the camera.
                   The site does the umpiring.
                 </p>
 
@@ -742,11 +741,6 @@ export default function HomePage() {
                     Play a friend
                     <span className="nb-btn-arrow"><IconArrowRight size={22} stroke={ICON_STROKE} /></span>
                   </button>
-                  <button className="nb-btn nb-btn--pink" onClick={() => enter("stranger")}>
-                    <IconWorld size={26} stroke={ICON_STROKE} />
-                    Play a stranger
-                    <span className="nb-btn-arrow"><IconArrowRight size={22} stroke={ICON_STROKE} /></span>
-                  </button>
                   <button className="nb-btn nb-btn--green" onClick={() => enter("computer")}>
                     <IconRobot size={26} stroke={ICON_STROKE} />
                     Play the computer
@@ -754,7 +748,7 @@ export default function HomePage() {
                   </button>
                   <button className="nb-btn nb-btn--sm" onClick={() => enter("friends")}>
                     <IconUserPlus size={16} stroke={ICON_STROKE} />
-                    Add friends
+                    Friends
                   </button>
                 </div>
               </div>
@@ -800,7 +794,7 @@ export default function HomePage() {
                   <i />
                   <i />
                 </span>
-                <span className="gc-win-title">{homeView === "login" ? "Create your name" : "Add friends"}</span>
+                <span className="gc-win-title">{homeView === "login" ? "Create your name" : "Friends"}</span>
               </div>
 
               <div className="flex flex-col gap-4 p-4">
@@ -917,6 +911,16 @@ export default function HomePage() {
                         <p className="gc-username mt-1">
                           {presence.incomingInvite.fromUsername}
                         </p>
+                        {(() => {
+                          const r = records[presence.incomingInvite.fromUsername];
+                          return (
+                            <p className="gc-lede mt-1">
+                              {r
+                                ? `Your record: Won ${r.wins} / Lost ${r.losses}${r.ties > 0 ? ` / Tied ${r.ties}` : ""}`
+                                : "No games against them yet"}
+                            </p>
+                          );
+                        })()}
                         <div className="mt-3 flex gap-3">
                           <button
                             className="gc-btn gc-btn--red flex-1"
