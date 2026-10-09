@@ -126,7 +126,6 @@ export default function HomePage() {
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [friendUsernameInput, setFriendUsernameInput] = useState("");
-  const [friendNicknameInput, setFriendNicknameInput] = useState("");
   const [friendError, setFriendError] = useState<string | null>(null);
 
   // Pulls the signed-in account's friend list. Synchronizing with an
@@ -227,7 +226,7 @@ export default function HomePage() {
     const name = normalizeUsername(friendUsernameInput);
     if (!auth.userId || !isValidUsername(name) || name === username) return;
     setFriendError(null);
-    const result = await addFriend(auth.userId, name, friendNicknameInput);
+    const result = await addFriend(auth.userId, name, "");
     if (result === "not-found") {
       setFriendError("Nobody has that name.");
     } else if (result === "error") {
@@ -235,7 +234,6 @@ export default function HomePage() {
     } else {
       setFriends(await loadFriends(auth.userId));
       setFriendUsernameInput("");
-      setFriendNicknameInput("");
     }
   };
 
@@ -878,7 +876,7 @@ export default function HomePage() {
                         </>
                       ) : (
                         <>
-                          <p className="gc-label">You are {auth.name}</p>
+                          <p className="gc-label">Your username</p>
                           <div className="mt-1 flex items-center justify-between gap-3">
                             <p className="gc-username">{username}</p>
                             <div className="flex gap-2">
@@ -948,18 +946,11 @@ export default function HomePage() {
                           onChange={(e) =>
                             setFriendUsernameInput(normalizeUsername(e.target.value))
                           }
-                          placeholder="their name"
+                          placeholder="username"
                           maxLength={16}
                           autoCapitalize="none"
                           autoCorrect="off"
                           spellCheck={false}
-                          className="gc-input"
-                        />
-                        <input
-                          value={friendNicknameInput}
-                          onChange={(e) => setFriendNicknameInput(e.target.value)}
-                          placeholder="what you call them (optional)"
-                          maxLength={20}
                           className="gc-input"
                         />
                         <button
@@ -990,7 +981,7 @@ export default function HomePage() {
                       <p className="gc-label">Your list</p>
                       {friends.length === 0 ? (
                         <p className="gc-lede mt-2">
-                          Nobody yet. Add someone by the name they picked.
+                          Nobody yet. Add someone by their username.
                         </p>
                       ) : (
                         <div className="mt-2 flex flex-col gap-2">
