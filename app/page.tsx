@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   IconArrowLeft,
@@ -17,6 +18,17 @@ import { VideoTile } from "@/components/VideoTile";
 import { Countdown } from "@/components/Countdown";
 import { Scoreboard } from "@/components/Scoreboard";
 import { HeroHands } from "@/components/HeroHands";
+
+// The 3D scenes are loaded on demand: three.js is heavy and the lobby does
+// not need it until a scene is drawn. Until it arrives (or if it can't run)
+// the flat SVG hands stand in.
+const HeroScene = dynamic(() => import("@/components/three/HeroScene"), {
+  ssr: false,
+  loading: () => <HeroHands />,
+});
+const ResultScene = dynamic(() => import("@/components/three/ResultScene"), {
+  ssr: false,
+});
 import { usePeerRoom, LOBBY_HOST_ID, type RoomStrategy } from "@/lib/usePeerRoom";
 import { useHandDetector } from "@/lib/handDetector";
 import { computerThrow, computerSideChoice } from "@/lib/computerOpponent";
@@ -100,6 +112,8 @@ export default function HomePage() {
   // means a link preview, an accidental double-open, or a stray
   // background tab can't silently occupy a slot.
   const [started, setStarted] = useState(false);
+  // Set once if WebGL fails for the ball-result replay, so the empty box hides.
+  const [resultSceneFailed, setResultSceneFailed] = useState(false);
   const [homeView, setHomeView] = useState<HomeView>("menu");
   const [mode, setMode] = useState<GameMode | null>(null);
   // The private room's own internal ID - generated the moment an invite
@@ -751,7 +765,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <HeroHands />
+              <HeroScene fallback={<HeroHands />} />
             </div>
           </div>
 
@@ -1259,6 +1273,15 @@ export default function HomePage() {
               <p className="gc-phase-body">
                 Batter {game.lastBall.batterValue}, bowler {game.lastBall.bowlerValue}.
               </p>
+              <div className="gc-result-3d" aria-hidden="true" hidden={resultSceneFailed}>
+                <ResultScene
+                  key={`${game.innings.host.runs}-${game.innings.guest.runs}-${game.lastBall.batterValue}-${game.lastBall.bowlerValue}-${game.lastBall.out}`}
+                  kind={game.lastBall.out ? "out" : "runs"}
+                  runs={game.lastBall.batterValue}
+                  fallback={null}
+                  onFail={() => setResultSceneFailed(true)}
+                />
+              </div>
               <span className="gc-verdict">
                 <span className="gc-verdict-num">
                   {game.lastBall.out ? "0" : `+${game.lastBall.batterValue}`}
