@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://handcricketomegle.lol"),
   title: "Hand Cricket Omegle",
   description:
     "Get matched with a stranger on camera and play hand cricket. Your webcam reads the throw, the scoreboard does the rest.",
