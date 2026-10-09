@@ -1,11 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="18" fill="#A3F23D" stroke="#000" stroke-width="6"/>
-  <g transform="translate(12 10) scale(0.76)" fill="#FFD60A" stroke="#000" stroke-width="5" stroke-linejoin="round">
-    <rect x="22" y="14" width="12" height="42" rx="6"/>
-    <rect x="37" y="6" width="12" height="50" rx="6"/>
-    <rect x="52" y="9" width="12" height="47" rx="6"/>
-    <rect x="67" y="20" width="12" height="38" rx="6"/>
-    <path d="M24 50 L24 62 C24 82 36 94 54 94 C70 94 80 84 80 66 L80 52 Z"/>
-    <path d="M26 58 C16 50 10 44 10 40 C10 35 16 34 20 38 L32 52 Z"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 2 96 96" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <g id="hand">
+      <rect x="25" y="14" width="13" height="50" rx="6.5"/>
+      <rect x="39" y="8" width="13" height="56" rx="6.5"/>
+      <rect x="53" y="12" width="13" height="52" rx="6.5"/>
+      <rect x="67" y="24" width="12" height="40" rx="6"/>
+      <path d="M25 50 L79 50 L79 66 C79 84 68 92 52 92 C37 92 25 84 25 68 Z"/>
+      <path d="M28 70 C17 62 12 54 13 48 C14 43 20 43 24 48 L32 60 Z"/>
+    </g>
+  </defs>
+  <use href="#hand" xlink:href="#hand" fill="#000" stroke="#000" stroke-width="9" stroke-linejoin="round"/>
+  <use href="#hand" xlink:href="#hand" fill="#FFD60A"/>
 </svg>
