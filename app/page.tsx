@@ -5,6 +5,7 @@ import {
   IconArrowLeft,
   IconArrowRight,
   IconCheck,
+  IconBrandInstagram,
   IconCopy,
   IconHandStop,
   IconLock,
@@ -16,6 +17,7 @@ import {
 import { VideoTile } from "@/components/VideoTile";
 import { Countdown } from "@/components/Countdown";
 import { Scoreboard } from "@/components/Scoreboard";
+import { INSTAGRAM_URL } from "@/lib/site";
 import { HeroHands } from "@/components/HeroHands";
 import { usePeerRoom, LOBBY_HOST_ID, type RoomStrategy } from "@/lib/usePeerRoom";
 import { useHandDetector } from "@/lib/handDetector";
@@ -758,6 +760,15 @@ export default function HomePage() {
           <p className="gc-credit mt-6 mb-3 text-center">
             A Vilicon Salley Production
           </p>
+          <a
+            className="gc-social"
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Vilicon Salley on Instagram"
+          >
+            <IconBrandInstagram size={20} stroke={ICON_STROKE} />
+          </a>
         </div>
 
         <div className="gc-ticker">
