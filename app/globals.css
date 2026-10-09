@@ -1484,18 +1484,30 @@ select {
   .gc-celebrate-frame { animation: none; }
 }
 
-/* Instagram link under the credit: a small hard-edged paper chip. */
+/* Credit line with the Instagram chip to its right. */
+.gc-credit-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 24px 0 12px;
+}
+.gc-credit-row .gc-credit,
+.gc-credit-row .gc-social {
+  margin: 0;
+}
+
 .gc-social {
   display: flex;
-  width: 40px;
-  height: 40px;
-  margin: 0 auto 10px;
+  flex: none;
+  width: 28px;
+  height: 28px;
   align-items: center;
   justify-content: center;
   background: var(--gc-paper);
   color: var(--gc-ink);
-  border: 3px solid var(--gc-ink);
-  box-shadow: var(--gc-shadow-press);
+  border: 2px solid var(--gc-ink);
+  box-shadow: 2px 2px 0 0 var(--gc-ink);
   transition: transform var(--gc-press) var(--gc-ease-out), box-shadow var(--gc-press) var(--gc-ease-out);
 }
 .gc-social:active {

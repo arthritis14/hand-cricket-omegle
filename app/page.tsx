@@ -757,18 +757,20 @@ export default function HomePage() {
             </div>
           </div>
 
-          <p className="gc-credit mt-6 mb-3 text-center">
-            A Vilicon Salley Production
-          </p>
-          <a
-            className="gc-social"
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Vilicon Salley on Instagram"
-          >
-            <IconBrandInstagram size={20} stroke={ICON_STROKE} />
-          </a>
+          <div className="gc-credit-row">
+            <p className="gc-credit text-center">
+              A Vilicon Salley Production
+            </p>
+            <a
+              className="gc-social"
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Vilicon Salley on Instagram"
+            >
+              <IconBrandInstagram size={16} stroke={ICON_STROKE} />
+            </a>
+          </div>
         </div>
 
         <div className="gc-ticker">
