@@ -928,6 +928,107 @@ select {
   z-index: 20;
 }
 
+/* ---- How to play ------------------------------------------------- */
+/* Same corner as the back control: it only shows on the home screen,
+   which has no back button, so the two never collide. */
+.gc-howto-btn {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  right: calc(12px + env(safe-area-inset-right, 0px));
+  z-index: 20;
+}
+
+.gc-howto {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  margin: auto;
+  overflow: hidden;
+  color: var(--gc-ink);
+}
+
+.gc-howto[open] {
+  display: flex;
+  flex-direction: column;
+  animation: gc-howto-in 220ms var(--gc-ease-out) both;
+}
+
+.gc-howto::backdrop {
+  background: rgba(10, 10, 10, 0.55);
+}
+
+@keyframes gc-howto-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gc-howto[open] { animation: none; }
+}
+
+.gc-howto .gc-win-title {
+  flex: 1;
+}
+
+.gc-howto-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -4px -4px -4px 0;
+  border: 2px solid var(--gc-ink);
+  background: var(--gc-paper);
+  cursor: pointer;
+}
+
+.gc-howto-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.gc-howto-body p,
+.gc-howto-body h2,
+.gc-howto-body h3,
+.gc-howto-body ul,
+.gc-howto-body ol {
+  margin: 0;
+}
+
+.gc-howto-body h3 {
+  margin-top: 4px;
+}
+
+.gc-howto-throws {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.gc-howto-throws li {
+  padding: 8px 10px;
+  border: 2px solid var(--gc-ink);
+  background: var(--gc-cream);
+}
+
+.gc-howto-steps,
+.gc-howto-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 20px;
+}
+
+.gc-howto-body .gc-btn {
+  margin-top: 6px;
+}
+
 /* ---- Layout helpers --------------------------------------------- */
 /* A screen that owns exactly one viewport, with its footer furniture
    (the ticker) counted as part of that viewport rather than pushed under

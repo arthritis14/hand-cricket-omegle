@@ -19,6 +19,7 @@ import { Countdown } from "@/components/Countdown";
 import { Scoreboard } from "@/components/Scoreboard";
 import { INSTAGRAM_URL } from "@/lib/site";
 import { HeroHands } from "@/components/HeroHands";
+import { HowToPlay } from "@/components/HowToPlay";
 import { usePeerRoom, LOBBY_HOST_ID, type RoomStrategy } from "@/lib/usePeerRoom";
 import { useHandDetector } from "@/lib/handDetector";
 import { computerThrow, computerSideChoice } from "@/lib/computerOpponent";
@@ -719,6 +720,7 @@ export default function HomePage() {
     return (
       <>
         <div className="gc-stadium" aria-hidden="true" />
+        <HowToPlay />
         <div className="gc-page gc-home">
         <div className="gc-screen-wrap">
           <div className="gc-center">
