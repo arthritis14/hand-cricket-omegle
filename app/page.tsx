@@ -764,11 +764,11 @@ export default function HomePage() {
 
         <div className="gc-ticker">
           <div className="gc-ticker-track" aria-hidden="true">
-            {[0, 1].map((copy) => (
+            {[0, 1, 2, 3, 4, 5].map((copy) => (
               <div className="flex" key={copy}>
                 <span>Odd or even</span>
                 <span>Your camera is the umpire</span>
-                <span>Six and out</span>
+                <span>1 to 6 runs</span>
                 <span>No sign up</span>
                 <span>One ball at a time</span>
               </div>
