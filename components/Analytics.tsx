@@ -61,17 +61,16 @@ export function Analytics() {
             zIndex: 60,
             maxWidth: 440,
             margin: "0 auto",
-            padding: 14,
+            padding: 12,
           }}
         >
-          <p className="gc-lede">
-            We use Google Analytics to count visitors and see which game modes get played. It
-            sets cookies. Your camera video is never recorded or sent to us.{" "}
+          <p className="gc-lede" style={{ fontSize: 13 }}>
+            We use cookies for analytics.{" "}
             <a href="/privacy" className="underline">
-              Privacy policy
+              Learn more
             </a>
           </p>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-2 flex gap-2">
             <button className="gc-btn gc-btn--sm gc-btn--yellow" onClick={() => decide("granted")}>
               Accept
             </button>
