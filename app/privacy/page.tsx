@@ -37,9 +37,10 @@ export default function PrivacyPage() {
 
       <h2 className="gc-label mt-8">Analytics</h2>
       <p className="gc-lede mt-2">
-        Only if you accept the banner, we use Google Analytics to count visitors, rough location
-        and which game modes are played. It sets cookies. If you decline, it is not loaded. Your
-        choice is kept in this browser.
+        We use Google Analytics to count visitors, rough location and which game modes are
+        played. It sets cookies. If you are in the EU, UK or Switzerland, it only loads if you
+        accept the banner, and your choice is kept in this browser. Elsewhere it runs without a
+        banner.
       </p>
 
       <h2 className="gc-label mt-8">Who you play</h2>

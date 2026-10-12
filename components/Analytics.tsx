@@ -15,8 +15,9 @@ function readChoice(): Choice | null {
   }
 }
 
-/** Loads Google Analytics only after the visitor says yes, and asks once.
- *  The choice is kept in this browser so the banner does not return. */
+/** Loads Google Analytics. Visitors in the EU, UK and Switzerland are asked
+ *  first, once, and the choice is kept in this browser. Everyone else is not
+ *  shown a banner. */
 export function Analytics() {
   // null until the stored choice has been read, so nothing flashes on load.
   const [choice, setChoice] = useState<Choice | null | "unread">("unread");
