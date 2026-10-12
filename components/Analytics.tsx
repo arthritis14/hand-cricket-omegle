@@ -1,0 +1,86 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Script from "next/script";
+import { CONSENT_KEY, GA_ID } from "@/lib/analytics";
+
+type Choice = "granted" | "denied";
+
+function readChoice(): Choice | null {
+  try {
+    const v = localStorage.getItem(CONSENT_KEY);
+    return v === "granted" || v === "denied" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Loads Google Analytics only after the visitor says yes, and asks once.
+ *  The choice is kept in this browser so the banner does not return. */
+export function Analytics() {
+  // null until the stored choice has been read, so nothing flashes on load.
+  const [choice, setChoice] = useState<Choice | null | "unread">("unread");
+
+  useEffect(() => {
+    // Reading browser storage after mount, so server and client markup match.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setChoice(readChoice());
+  }, []);
+
+  if (!GA_ID || choice === "unread") return null;
+
+  const decide = (next: Choice) => {
+    try {
+      localStorage.setItem(CONSENT_KEY, next);
+    } catch {
+      // Private mode: the choice just lasts until the page is closed.
+    }
+    setChoice(next);
+  };
+
+  return (
+    <>
+      {choice === "granted" && (
+        <>
+          <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+          <Script id="ga4-init" strategy="afterInteractive">
+            {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('js',new Date());gtag('config','${GA_ID}',{anonymize_ip:true});`}
+          </Script>
+        </>
+      )}
+      {choice === null && (
+        <div
+          role="dialog"
+          aria-label="Analytics"
+          className="gc-card gc-card--cream"
+          style={{
+            position: "fixed",
+            left: 12,
+            right: 12,
+            bottom: "calc(12px + env(safe-area-inset-bottom))",
+            zIndex: 60,
+            maxWidth: 440,
+            margin: "0 auto",
+            padding: 14,
+          }}
+        >
+          <p className="gc-lede">
+            We use Google Analytics to count visitors and see which game modes get played. It
+            sets cookies. Your camera video is never recorded or sent to us.{" "}
+            <a href="/privacy" className="underline">
+              Privacy policy
+            </a>
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button className="gc-btn gc-btn--sm gc-btn--yellow" onClick={() => decide("granted")}>
+              Accept
+            </button>
+            <button className="gc-btn gc-btn--sm" onClick={() => decide("denied")}>
+              No thanks
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

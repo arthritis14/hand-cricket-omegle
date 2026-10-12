@@ -26,15 +26,18 @@ import { computerThrow, computerSideChoice } from "@/lib/computerOpponent";
 import { roomIdFromCode } from "@/lib/roomCode";
 import { normalizeUsername, isValidUsername } from "@/lib/username";
 import {
-  loadFriends,
+  loadFriendLists,
   addFriend,
+  acceptRequest,
   removeFriend,
   loadRecords,
   saveResult,
   type Friend,
+  type FriendRequest,
   type WinLoss,
 } from "@/lib/friends";
 import { useAuth } from "@/lib/useAuth";
+import { track } from "@/lib/analytics";
 import { usePresenceHub, type FriendStatus } from "@/lib/usePresenceHub";
 import type { GameMessage } from "@/lib/messages";
 import {
@@ -118,6 +121,10 @@ export default function HomePage() {
   const auth = useAuth();
   const username = auth.username;
   const [friends, setFriends] = useState<Friend[]>([]);
+  // Requests waiting on this player, and ones this player has sent.
+  const [incomingRequests, setIncomingRequests] = useState<FriendRequest[]>([]);
+  const [sentRequests, setSentRequests] = useState<string[]>([]);
+  const [friendNotice, setFriendNotice] = useState<string | null>(null);
   const [records, setRecords] = useState<Record<string, WinLoss>>({});
   // Who the current friend match is against, for saving its result.
   const [opponentUsername, setOpponentUsername] = useState<string | null>(null);
@@ -131,17 +138,41 @@ export default function HomePage() {
   const [friendUsernameInput, setFriendUsernameInput] = useState("");
   const [friendError, setFriendError] = useState<string | null>(null);
 
+  // Re-reads friends and requests. Called on load, after any change, and on a
+  // timer while the Friends screen is open so a new request or an acceptance
+  // shows up without a reload.
+  const refreshFriends = async () => {
+    if (!auth.userId) return;
+    const lists = await loadFriendLists(auth.userId);
+    setFriends(lists.friends);
+    setIncomingRequests(lists.incoming);
+    setSentRequests(lists.outgoing);
+  };
+
+  useEffect(() => {
+    if (homeView !== "private-hub" || started) return;
+    const id = setInterval(refreshFriends, 8000);
+    return () => clearInterval(id);
+    // refreshFriends only reads auth.userId, which is current whenever this fires
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeView, started, auth.userId]);
+
   // Pulls the signed-in account's friend list. Synchronizing with an
   // external store (the database), not derived state.
   useEffect(() => {
     if (auth.status !== "ready" || !auth.userId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setFriends([]);
+      setIncomingRequests([]);
+      setSentRequests([]);
       return;
     }
     let cancelled = false;
-    loadFriends(auth.userId).then((list) => {
-      if (!cancelled) setFriends(list);
+    loadFriendLists(auth.userId).then((lists) => {
+      if (cancelled) return;
+      setFriends(lists.friends);
+      setIncomingRequests(lists.incoming);
+      setSentRequests(lists.outgoing);
     });
     loadRecords(auth.userId).then((r) => {
       if (!cancelled) setRecords(r);
@@ -175,6 +206,7 @@ export default function HomePage() {
     setPendingMode(null);
     setMode(target);
     setStarted(true);
+    track("game_started", { mode: target });
   };
 
   // Once the profile exists, a pending "create your name" screen moves on
@@ -223,21 +255,47 @@ export default function HomePage() {
     setOpponentUsername(presence.accepted.opponent);
     setMode(presence.accepted.role === "host" ? "private-host" : "private-guest");
     setStarted(true);
+    track("game_started", { mode: "friend" });
   }, [presence.accepted]);
 
   const handleAddFriend = async () => {
     const name = normalizeUsername(friendUsernameInput);
     if (!auth.userId || !isValidUsername(name) || name === username) return;
     setFriendError(null);
-    const result = await addFriend(auth.userId, name, "");
+    setFriendNotice(null);
+    const result = await addFriend(auth.userId, name);
     if (result === "not-found") {
       setFriendError("Nobody has that name.");
     } else if (result === "error") {
-      setFriendError("Could not add them. Try again.");
+      setFriendError("Could not send that. Try again.");
+    } else if (result === "already-friends") {
+      setFriendError("You are already friends.");
+    } else if (result === "already-requested") {
+      setFriendError("You already sent them a request.");
     } else {
-      setFriends(await loadFriends(auth.userId));
+      setFriendNotice(
+        result === "accepted"
+          ? `You and ${name} are now friends.`
+          : `Request sent to ${name}. You can play once they accept.`
+      );
+      await refreshFriends();
       setFriendUsernameInput("");
     }
+  };
+
+  const handleAcceptRequest = async (name: string) => {
+    if (!auth.userId) return;
+    if (await acceptRequest(auth.userId, name)) await refreshFriends();
+    else setFriendError("Could not accept that. Try again.");
+  };
+
+  // Declining a request, cancelling one you sent and unfriending are all the
+  // same delete.
+  const handleDropRequest = async (name: string) => {
+    if (!auth.userId) return;
+    setIncomingRequests((r) => r.filter((x) => x.username !== name));
+    setSentRequests((r) => r.filter((x) => x !== name));
+    await removeFriend(auth.userId, name);
   };
 
   const handleRemoveFriend = async (name: string) => {
@@ -467,6 +525,17 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     resetMatch("toss-call");
   }, [game.phase, selfRematch, peerRematch, mode]);
+
+  // One event per finished match, whatever the mode.
+  const finishTrackedRef = useRef(false);
+  useEffect(() => {
+    if (game.phase !== "game-over") {
+      finishTrackedRef.current = false;
+    } else if (!finishTrackedRef.current) {
+      finishTrackedRef.current = true;
+      track("game_finished", { mode: mode ?? "unknown" });
+    }
+  }, [game.phase, mode]);
 
   // A finished friend match goes on the scorecard, once, from this player's
   // side. Stranger and computer games are not kept.
@@ -980,8 +1049,63 @@ export default function HomePage() {
                           Add
                         </button>
                         {friendError && <p className="gc-error">{friendError}</p>}
+                        {friendNotice && <p className="gc-lede">{friendNotice}</p>}
                       </div>
                     </div>
+
+                    {incomingRequests.length > 0 && (
+                      <div>
+                        <p className="gc-label">Friend requests</p>
+                        <div className="mt-2 flex flex-col gap-2">
+                          {incomingRequests.map((req) => (
+                            <div key={req.username} className="gc-row">
+                              <div className="gc-row-main">
+                                <div className="min-w-0">
+                                  <p className="gc-row-name">{req.name}</p>
+                                  <p className="gc-row-sub">{req.username}</p>
+                                </div>
+                              </div>
+                              <div className="flex flex-none items-center gap-2">
+                                <button
+                                  className="gc-btn gc-btn--sm gc-btn--yellow"
+                                  onClick={() => handleAcceptRequest(req.username)}
+                                >
+                                  <IconCheck size={16} stroke={ICON_STROKE} />
+                                  Accept
+                                </button>
+                                <button
+                                  className="gc-link-btn"
+                                  onClick={() => handleDropRequest(req.username)}
+                                >
+                                  Decline
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {sentRequests.length > 0 && (
+                      <div>
+                        <p className="gc-label">Waiting for them to accept</p>
+                        <div className="mt-2 flex flex-col gap-2">
+                          {sentRequests.map((name) => (
+                            <div key={name} className="gc-row">
+                              <div className="gc-row-main">
+                                <p className="gc-row-name">{name}</p>
+                              </div>
+                              <button
+                                className="gc-link-btn"
+                                onClick={() => handleDropRequest(name)}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {pendingMode && (
                       <button
@@ -996,7 +1120,7 @@ export default function HomePage() {
                       <p className="gc-label">Your list</p>
                       {friends.length === 0 ? (
                         <p className="gc-lede mt-2">
-                          Nobody yet. Add someone by their username.
+                          Nobody yet. Send a request by username; they show up here once they accept.
                         </p>
                       ) : (
                         <div className="mt-2 flex flex-col gap-2">

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { JsonLd } from "@/components/JsonLd";
+import { Analytics } from "@/components/Analytics";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 const TITLE = "Hand Cricket Omegle: Play Hand Cricket Online on Camera";
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <JsonLd data={jsonLd} />
         {children}
+        <Analytics />
       </body>
     </html>
   );

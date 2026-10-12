@@ -100,6 +100,14 @@ export function usePresenceHub({ enabled, username, friends }: UsePresenceHubArg
       conn.on("data", (data) => {
         const msg = data as PresenceMessage;
         if (msg.type === "invite") {
+          // Only accepted friends can invite. The presence ID is public, so
+          // anyone could send this message; drop it unless the sender is on
+          // this player's friend list.
+          if (!friendsRef.current.some((f) => f.username === msg.fromUsername)) {
+            conn.send({ type: "invite-declined" });
+            setTimeout(() => conn.close(), 200);
+            return;
+          }
           incomingConnRef.current = conn;
           setIncomingInvite({ fromUsername: msg.fromUsername, roomCode: msg.roomCode });
         } else if (msg.type === "invite-cancelled") {
