@@ -20,14 +20,25 @@ function readChoice(): Choice | null {
 export function Analytics() {
   // null until the stored choice has been read, so nothing flashes on load.
   const [choice, setChoice] = useState<Choice | null | "unread">("unread");
+  // Whether this visitor's country needs opt-in consent. Unknown until asked,
+  // and anything that goes wrong counts as "needs consent".
+  const [needsConsent, setNeedsConsent] = useState<boolean | null>(null);
 
   useEffect(() => {
+    fetch("/api/region")
+      .then((r) => r.json())
+      .then((d) => setNeedsConsent(d.needsConsent !== false))
+      .catch(() => setNeedsConsent(true));
+
     // Reading browser storage after mount, so server and client markup match.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setChoice(readChoice());
   }, []);
 
-  if (!GA_ID || choice === "unread") return null;
+  if (!GA_ID || choice === "unread" || needsConsent === null) return null;
+
+  // Outside the EU and UK analytics just runs. Inside, only after Accept.
+  const loadGa = choice === "granted" || (!needsConsent && choice !== "denied");
 
   const decide = (next: Choice) => {
     try {
@@ -40,7 +51,7 @@ export function Analytics() {
 
   return (
     <>
-      {choice === "granted" && (
+      {loadGa && (
         <>
           <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
           <Script id="ga4-init" strategy="afterInteractive">
@@ -48,7 +59,7 @@ export function Analytics() {
           </Script>
         </>
       )}
-      {choice === null && (
+      {needsConsent && choice === null && (
         <div
           role="dialog"
           aria-label="Analytics"
