@@ -37,6 +37,7 @@ import {
   type WinLoss,
 } from "@/lib/friends";
 import { useAuth } from "@/lib/useAuth";
+import { useActivity, toPlayMode, logGameStart, logGameFinish } from "@/lib/useActivity";
 import { track } from "@/lib/analytics";
 import { usePresenceHub, type FriendStatus } from "@/lib/usePresenceHub";
 import type { GameMessage } from "@/lib/messages";
@@ -536,6 +537,24 @@ export default function HomePage() {
       track("game_finished", { mode: mode ?? "unknown" });
     }
   }, [game.phase, mode]);
+
+  // Owner stats (/admin): a heartbeat while the page is open, and one log row
+  // per game from the toss to the final ball. Never affects play.
+  useActivity(auth.userId, started && game.phase !== "lobby" ? toPlayMode(mode) : null);
+  const gameLogIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!started) gameLogIdRef.current = null;
+  }, [started]);
+  useEffect(() => {
+    const playMode = toPlayMode(mode);
+    if (!auth.userId || !playMode) return;
+    if (game.phase === "toss-call" && !gameLogIdRef.current) {
+      gameLogIdRef.current = logGameStart(auth.userId, playMode);
+    } else if (game.phase === "game-over" && gameLogIdRef.current) {
+      logGameFinish(gameLogIdRef.current);
+      gameLogIdRef.current = null;
+    }
+  }, [game.phase, mode, auth.userId]);
 
   // A finished friend match goes on the scorecard, once, from this player's
   // side. Stranger and computer games are not kept.

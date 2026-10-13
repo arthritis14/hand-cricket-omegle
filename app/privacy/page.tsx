@@ -27,6 +27,11 @@ export default function PrivacyPage() {
         your friend list and requests, and the results of matches against friends. This is stored
         with Supabase. You can ask us to delete it at any time.
       </p>
+      <p className="gc-lede mt-2">
+        Once you have an account, we also note when you have the game open and when each game
+        starts and finishes, so we can see how many people play. This is tied to your account,
+        not to your camera or anything on it.
+      </p>
 
       <h2 className="gc-label mt-8">Connections and your IP address</h2>
       <p className="gc-lede mt-2">
