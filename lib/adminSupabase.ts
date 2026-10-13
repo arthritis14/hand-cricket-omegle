@@ -1,12 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
-// The admin page signs in with a real email, separately from the anonymous
-// player account that lives in this same browser. Its own storage key keeps
-// the two sessions from overwriting each other.
+// The admin page uses the shared password, not a Supabase login, so this
+// client keeps no session and never touches the player account in this browser.
 export const adminSupabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:54321",
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "missing-key",
-  { auth: { storageKey: "hc-admin-auth" } }
+  { auth: { persistSession: false, autoRefreshToken: false } }
 );
 
 export interface AdminStats {

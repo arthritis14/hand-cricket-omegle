@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
 import { adminSupabase, type AdminStats } from "@/lib/adminSupabase";
 
 const REFRESH_MS = 30_000;
 
-type View = "loading" | "signed-out" | "link-sent" | "denied" | "ready";
+type View = "loading" | "signed-out" | "ready";
+
+const PASSWORD_KEY = "hc-admin-password";
 
 // Two sides of one real match are logged (one per player); a computer game
 // has just one. This turns those rows back into whole games.
@@ -26,62 +27,82 @@ function ago(iso: string | null) {
 
 export default function AdminPage() {
   const [view, setView] = useState<View>("loading");
-  const [session, setSession] = useState<Session | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
-  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  const load = useCallback(async () => {
-    const { data, error: rpcError } = await adminSupabase.rpc("hc_admin_stats");
+  // Asks the database for the stats with this password. The database does the
+  // checking (and the lockout after too many wrong tries); the password is
+  // not in this code or the repo.
+  const load = useCallback(async (pw: string, quiet = false) => {
+    const { data, error: rpcError } = await adminSupabase.rpc("hc_admin_stats", { p_password: pw });
     if (rpcError) {
-      // 42501 is the database saying this account is not on the allowlist.
-      if (rpcError.code === "42501") setView("denied");
-      else setError("Could not load the stats. Check your connection.");
-      return;
+      if (!quiet) setError("Could not load the stats. Check your connection.");
+      return false;
+    }
+    const reply = data as AdminStats | { error: string };
+    if ("error" in reply) {
+      if (reply.error === "locked") setError("Too many wrong tries. Wait 15 minutes and try again.");
+      else if (!quiet) setError("Wrong password.");
+      return false;
     }
     setError(null);
-    setStats(data as AdminStats);
+    setStats(reply);
     setView("ready");
+    return true;
   }, []);
 
   useEffect(() => {
-    const { data } = adminSupabase.auth.onAuthStateChange((_event, next) => {
-      setSession(next);
-      if (!next?.user.email) {
-        setView((v) => (v === "link-sent" ? v : "signed-out"));
-        return;
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(PASSWORD_KEY);
+    } catch {}
+    if (!saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setView("signed-out");
+      return;
+    }
+    void load(saved, true).then((ok) => {
+      if (!ok) {
+        try {
+          localStorage.removeItem(PASSWORD_KEY);
+        } catch {}
+        setView("signed-out");
       }
-      // Deferred: calling Supabase inside this callback can deadlock it.
-      setTimeout(() => void load(), 0);
     });
-    return () => data.subscription.unsubscribe();
   }, [load]);
 
   useEffect(() => {
     if (view !== "ready") return;
     const id = setInterval(() => {
-      if (!document.hidden) void load();
+      let saved: string | null = null;
+      try {
+        saved = localStorage.getItem(PASSWORD_KEY);
+      } catch {}
+      if (saved && !document.hidden) void load(saved, true);
     }, REFRESH_MS);
     return () => clearInterval(id);
   }, [view, load]);
 
-  const sendLink = async () => {
-    const address = email.trim();
-    if (!address.includes("@")) return;
-    setSending(true);
+  const signIn = async () => {
+    if (!password) return;
+    setBusy(true);
     setError(null);
-    const { error: otpError } = await adminSupabase.auth.signInWithOtp({
-      email: address,
-      options: { emailRedirectTo: `${window.location.origin}/admin` },
-    });
-    setSending(false);
-    if (otpError) setError(otpError.message);
-    else setView("link-sent");
+    const ok = await load(password);
+    setBusy(false);
+    if (ok) {
+      try {
+        localStorage.setItem(PASSWORD_KEY, password);
+      } catch {}
+      setPassword("");
+    }
   };
 
-  const signOut = async () => {
-    await adminSupabase.auth.signOut();
+  const signOut = () => {
+    try {
+      localStorage.removeItem(PASSWORD_KEY);
+    } catch {}
     setStats(null);
     setView("signed-out");
   };
@@ -91,47 +112,30 @@ export default function AdminPage() {
       <style>{CSS}</style>
       <header className="adm-head">
         <h1>Admin</h1>
-        {session?.user.email && (
+        {view === "ready" && (
           <span className="adm-who">
-            {session.user.email} · <button onClick={signOut}>Sign out</button>
+            <button onClick={signOut}>Sign out</button>
           </span>
         )}
       </header>
 
       {view === "loading" && <p className="adm-note">Loading…</p>}
 
-      {(view === "signed-out" || view === "link-sent") && (
+      {view === "signed-out" && (
         <section className="adm-card adm-login">
           <h2>Sign in</h2>
-          {view === "link-sent" ? (
-            <p>
-              Check <b>{email}</b> for a sign-in link, then open it in this browser.
-            </p>
-          ) : (
-            <>
-              <p>Enter your email and we will send you a one-time sign-in link.</p>
-              <input
-                type="email"
-                value={email}
-                placeholder="you@gmail.com"
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && void sendLink()}
-              />
-              <button className="adm-btn" onClick={sendLink} disabled={sending}>
-                {sending ? "Sending…" : "Email me a link"}
-              </button>
-            </>
-          )}
+          <input
+            type="password"
+            value={password}
+            placeholder="Password"
+            autoComplete="current-password"
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && void signIn()}
+          />
+          <button className="adm-btn" onClick={signIn} disabled={busy}>
+            {busy ? "Checking…" : "Open dashboard"}
+          </button>
           {error && <p className="adm-err">{error}</p>}
-        </section>
-      )}
-
-      {view === "denied" && (
-        <section className="adm-card">
-          <h2>No access</h2>
-          <p>
-            {session?.user.email} is not on the admin list. Sign out and use an approved email.
-          </p>
         </section>
       )}
 
