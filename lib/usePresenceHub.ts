@@ -150,6 +150,13 @@ export function usePresenceHub({ enabled, username, friends }: UsePresenceHubArg
       peer.on("error", (err) => {
         if (err.type === "unavailable-id") {
           setClaimStatus("taken");
+        } else if (err.type === "peer-unavailable") {
+          // Raised on OUR peer whenever a connect() target (a friend
+          // probe or an invite) isn't online. It says nothing about our
+          // own connection, so it must not knock us out of "claimed" -
+          // that froze every friend dot and showed "Could not go online"
+          // the moment an offline friend was probed. The probe/invite
+          // timeouts already mark that friend offline/failed.
         } else {
           console.warn("Presence peer error", err);
           setClaimStatus("error");
